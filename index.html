@@ -3,12 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <!-- タイトルも変更してタブで確認しやすくする -->
-    <title>AI Calendar - v24.0 Ultra Modern</title>
+    <title>AI Calendar - v25.0 Fixed</title>
     
-    <!-- キャッシュ対策: ?v=24 を付与してブラウザに「新しいファイルだ」と認識させる -->
-    <script src="https://cdn.tailwindcss.com?v=24"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css?v=24">
+    <!-- キャッシュ対策: ?v=25 -->
+    <script src="https://cdn.tailwindcss.com?v=25"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css?v=25">
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
     
     <style>
@@ -16,7 +15,6 @@
         body { 
             font-family: 'Plus Jakarta Sans', 'Noto Sans JP', sans-serif; 
             overflow: hidden; 
-            /* 背景色を微妙に変えて更新がわかるようにする */
             background: linear-gradient(135deg, #e0c3fc 0%, #8ec5fc 100%);
             color: #1e293b;
             -webkit-tap-highlight-color: transparent;
@@ -116,8 +114,8 @@
 </head>
 <body class="h-screen w-screen flex flex-col md:flex-row overflow-hidden text-slate-800">
 
-    <!-- Version Badge (更新確認用) -->
-    <div class="fixed top-0 left-0 bg-indigo-600 text-white text-[10px] px-3 py-1 z-[100] font-bold rounded-br-xl shadow-lg">v24.0</div>
+    <!-- Version Badge -->
+    <div class="fixed top-0 left-0 bg-indigo-600 text-white text-[10px] px-3 py-1 z-[100] font-bold rounded-br-xl shadow-lg">v25.0</div>
 
     <!-- Sidebar (PC) / Bottom Nav (Mobile) -->
     <nav class="glass z-50 flex md:flex-col justify-between items-center p-2 md:py-6 md:px-3 fixed md:relative bottom-0 w-full md:w-24 md:h-full border-t md:border-t-0 md:border-r border-white/40 shadow-xl order-2 md:order-1 h-16">
@@ -173,7 +171,7 @@
                     <div class="bg-gradient-to-br from-indigo-500 to-purple-600 w-16 h-16 rounded-2xl flex items-center justify-center mb-6 shadow-lg text-white">
                         <i class="fas fa-lock text-2xl"></i>
                     </div>
-                    <h2 class="text-2xl font-bold mb-2">Welcome</h2>
+                    <h2 class="text-2xl font-bold mb-2">Welcome v25</h2>
                     <p class="text-sm text-slate-600 mb-6">ログインして全ての機能を利用しましょう。</p>
                     <button id="loginBtnLarge" class="bg-slate-900 text-white px-8 py-3 rounded-xl font-bold shadow-xl hover:scale-105 transition transform w-full">Googleでログイン</button>
                     <div id="authErrorMessage" class="hidden mt-4 p-3 bg-red-100/80 text-red-600 text-xs text-left rounded-xl border border-red-200"></div>
@@ -284,7 +282,7 @@
             <div class="space-y-5">
                 <div>
                     <label class="text-xs font-bold text-slate-400 uppercase ml-2">Gemini API Key</label>
-                    <input type="password" id="apiKeyInput" class="w-full px-5 py-3 bg-white/50 border border-slate-200 rounded-xl outline-none focus:border-indigo-500 font-mono text-sm">
+                    <input type="password" id="apiKeyInput" class="w-full px-5 py-3 bg-white/50 border border-slate-200 rounded-xl outline-none focus:border-indigo-500 font-mono text-sm" placeholder="AIzaSy...">
                 </div>
                 <div>
                     <label class="text-xs font-bold text-slate-400 uppercase ml-2">Model</label>
@@ -339,7 +337,7 @@
         messagingSenderId: "591169343842",
         appId: "1:591169343842:web:4345e3fdff52d4b5cadc3b"
     };
-    const appId = "calendar-ultra-v24";
+    const appId = "calendar-ultra-v25";
 
     const fbApp = initializeApp(firebaseConfig);
     const auth = getAuth(fbApp);
@@ -347,8 +345,8 @@
     const provider = new GoogleAuthProvider();
 
     let user = null, events = [], currentDate = new Date(), selectedDateStr = null, unsubscribe = null;
-    let geminiKey = localStorage.getItem('v24_key') || "", geminiModel = localStorage.getItem('v24_model') || "gemini-1.5-flash";
-    let notificationsEnabled = localStorage.getItem('v24_notify') === 'true';
+    let geminiKey = localStorage.getItem('v25_key') || "", geminiModel = localStorage.getItem('v25_model') || "gemini-1.5-flash";
+    let notificationsEnabled = localStorage.getItem('v25_notify') === 'true';
 
     const getEl = (id) => document.getElementById(id);
     const toggleClass = (id, cls, condition) => getEl(id).classList.toggle(cls, condition);
@@ -425,12 +423,12 @@
         Notification.requestPermission().then(p => {
             if(p === 'granted') {
                 notificationsEnabled = true;
-                localStorage.setItem('v24_notify', 'true');
+                localStorage.setItem('v25_notify', 'true');
                 getEl('notificationToggle').checked = true;
                 showNotify("通知をONにしました", "success");
             } else {
                 notificationsEnabled = false;
-                localStorage.setItem('v24_notify', 'false');
+                localStorage.setItem('v25_notify', 'false');
                 getEl('notificationToggle').checked = false;
                 alert("通知がブロックされました");
             }
@@ -474,6 +472,9 @@
 
     // --- AI & Model Discovery ---
     getEl('discoverBtn').onclick = async () => {
+        // キーがメモリになければストレージから再取得
+        if (!geminiKey) geminiKey = localStorage.getItem('v25_key') || "";
+        
         if (!geminiKey) return showNotify("APIキーを入力してください", "error");
         setLoading(true, "Searching Models...");
         try {
@@ -502,6 +503,9 @@
     };
 
     async function analyzeImage(base64) {
+        // Double Check
+        if (!geminiKey) geminiKey = localStorage.getItem('v25_key') || "";
+        
         if (!geminiKey) return showNotify("APIキーを設定してください", "error");
         setLoading(true, "Analyzing...");
         const prompt = `画像からカレンダー予定を抽出しJSON形式で返してください: [{"title": "件名", "date": "YYYY-MM-DD", "time": "HH:mm", "description": ""}]。`;
@@ -667,13 +671,19 @@
     getEl('closeSettings').onclick = () => hideModal('settingsModal');
     getEl('notificationToggle').onchange = (e) => {
         if (e.target.checked) requestNotifyPermission();
-        else { notificationsEnabled = false; localStorage.setItem('v24_notify', 'false'); }
+        else { notificationsEnabled = false; localStorage.setItem('v25_notify', 'false'); }
     };
+    
     getEl('saveSettings').onclick = () => {
         geminiKey = getEl('apiKeyInput').value.trim();
         geminiModel = getEl('modelSelect').value;
-        localStorage.setItem('v24_key', geminiKey); localStorage.setItem('v24_model', geminiModel);
-        showNotify("Saved", "success"); hideModal('settingsModal');
+        localStorage.setItem('v25_key', geminiKey); 
+        localStorage.setItem('v25_model', geminiModel);
+        
+        // 即時反映
+        getEl('activeModelBadge').textContent = geminiModel;
+        showNotify("Saved", "success"); 
+        hideModal('settingsModal');
     };
     
     const closeAiModalHandler = () => { hideModal('aiModal'); getEl('previewArea').classList.add('hidden'); getEl('dropZone').classList.remove('hidden'); };
@@ -699,7 +709,7 @@
     function showNotify(txt, type) {
         const n = getEl('notification'); getEl('notifyText').textContent = txt;
         const icon = getEl('notifyIcon');
-        n.className = `fixed top-6 left-1/2 transform -translate-x-1/2 px-6 py-3 rounded-full shadow-lg z-[100] flex items-center space-x-3 min-w-[200px] text-white transition-all duration-300 ${type==='success'?'bg-emerald-500':'bg-red-500'}`;
+        n.className = `fixed top-6 left-1/2 transform -translate-x-1/2 px-6 py-3 rounded-full shadow-lg z-[100] flex items-center space-x-3 min-w-[300px] text-white transition-all duration-300 ${type==='success'?'bg-emerald-500':'bg-red-500'}`;
         icon.innerHTML = type==='success'?'<i class="fas fa-check"></i>':'<i class="fas fa-exclamation"></i>';
         n.classList.remove('translate-y-[-150%]', 'opacity-0');
         setTimeout(() => n.classList.add('translate-y-[-150%]', 'opacity-0'), 4000);
