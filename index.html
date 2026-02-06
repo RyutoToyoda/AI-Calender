@@ -3,17 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>AI Calendar - Ultra Modern v22</title>
-    <!-- キャッシュ対策のためクエリパラメータを追加 -->
-    <script src="https://cdn.tailwindcss.com?v=3.4.1"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- タイトルにもバージョンを入れて変化を確認しやすくする -->
+    <title>AI Calendar v23.0</title>
+    
+    <!-- キャッシュ対策: ?v=23 を付与 -->
+    <script src="https://cdn.tailwindcss.com?v=23"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css?v=23">
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+    
     <style>
         :root { --glass-border: rgba(255, 255, 255, 0.4); --glass-bg: rgba(255, 255, 255, 0.65); }
         body { 
             font-family: 'Plus Jakarta Sans', 'Noto Sans JP', sans-serif; 
             overflow: hidden; 
-            background: linear-gradient(135deg, #e0c3fc 0%, #8ec5fc 100%);
+            /* デザイン変更がわかるよう背景色を微調整 */
+            background: linear-gradient(135deg, #c4b5fd 0%, #a5f3fc 100%);
             color: #1e293b;
             -webkit-tap-highlight-color: transparent;
         }
@@ -31,58 +35,59 @@
         .calendar-grid { 
             display: grid; 
             grid-template-columns: repeat(7, 1fr); 
-            gap: 12px; 
-            padding: 12px;
+            gap: 8px; 
+            padding: 8px;
         }
 
         /* 日付カード */
         .day-card { 
             min-height: 90px;
-            height: calc((100vh - 140px) / 5.5); 
+            height: calc((100vh - 160px) / 5.5); 
             display: flex;
             flex-direction: column; 
             background: rgba(255, 255, 255, 0.5);
-            border-radius: 16px;
-            padding: 8px; 
+            border-radius: 12px;
+            padding: 6px; 
             position: relative;
-            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            transition: all 0.2s;
             border: 1px solid transparent;
             cursor: pointer;
             overflow: hidden;
         }
 
         @media (max-width: 768px) {
-            .calendar-grid { gap: 6px; padding: 6px; }
-            .day-card { border-radius: 10px; height: calc((100vh - 220px) / 6); min-height: 70px; padding: 4px; }
+            .calendar-grid { gap: 4px; padding: 4px; }
+            .day-card { border-radius: 8px; height: calc((100vh - 240px) / 6); min-height: 70px; padding: 4px; }
         }
 
         .day-card:hover { 
             background: rgba(255, 255, 255, 0.9); 
-            transform: translateY(-4px); 
-            box-shadow: 0 12px 24px -8px rgba(0, 0, 0, 0.15);
+            transform: translateY(-2px); 
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
             z-index: 10;
         }
         
         .day-card.selected { 
             background: #fff;
             border-color: #8b5cf6;
-            box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.3);
+            box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.5);
         }
         
         .today { background: rgba(255, 255, 255, 0.85); }
         .today .day-num { 
             background: linear-gradient(135deg, #8b5cf6, #6366f1); 
             color: white; 
-            box-shadow: 0 4px 10px rgba(139, 92, 246, 0.4);
+            box-shadow: 0 2px 8px rgba(139, 92, 246, 0.4);
         }
 
+        /* 祝日 */
         .holiday .day-num { color: #ef4444; }
-        .holiday { background: rgba(254, 242, 242, 0.6); }
+        .holiday { background: rgba(254, 242, 242, 0.5); }
 
         .day-num {
-            width: 28px; height: 28px;
+            width: 26px; height: 26px;
             display: flex; align-items: center; justify-content: center;
-            border-radius: 10px; margin-bottom: 4px;
+            border-radius: 8px; margin-bottom: 4px;
             font-weight: 700; color: #64748b;
             font-size: 0.9rem;
         }
@@ -90,21 +95,19 @@
         /* 予定チップ */
         .event-pill { 
             font-size: 0.65rem; 
-            padding: 3px 8px; 
-            border-radius: 20px; 
-            margin-bottom: 3px; 
+            padding: 2px 6px; 
+            border-radius: 4px; 
+            margin-bottom: 2px; 
             white-space: nowrap; 
             overflow: hidden; 
             text-overflow: ellipsis; 
             background: #f3e8ff; 
             color: #6b21a8; 
             font-weight: 600;
-            border: 1px solid #e9d5ff;
-            transition: transform 0.2s;
+            border-left: 2px solid #a855f7;
         }
-        .event-pill:hover { transform: scale(1.02); }
 
-        /* スイッチなどのUIパーツ */
+        /* スイッチ */
         .toggle-checkbox:checked { right: 0; border-color: #6366f1; }
         .toggle-checkbox:checked + .toggle-label { background-color: #6366f1; }
         .toggle-checkbox { right: 50%; border-color: #cbd5e1; transition: all 0.3s; }
@@ -117,12 +120,14 @@
 </head>
 <body class="h-screen w-screen flex flex-col md:flex-row overflow-hidden text-slate-800">
 
+    <!-- Version Marker (更新確認用) -->
+    <div class="fixed top-0 left-0 bg-red-600 text-white text-[10px] px-2 py-1 z-[100] font-bold rounded-br-lg shadow-lg">v23.0</div>
+
     <!-- Sidebar (PC) / Bottom Nav (Mobile) -->
     <nav class="glass z-50 flex md:flex-col justify-between items-center p-2 md:py-6 md:px-3 fixed md:relative bottom-0 w-full md:w-24 md:h-full border-t md:border-t-0 md:border-r border-white/40 shadow-xl order-2 md:order-1 h-16">
-        <div class="hidden md:flex bg-white/80 w-12 h-12 rounded-2xl items-center justify-center text-indigo-600 shadow-sm mb-2">
+        <div class="hidden md:flex bg-white/80 w-12 h-12 rounded-2xl items-center justify-center text-indigo-600 shadow-sm mb-8">
             <i class="fas fa-calendar-check text-2xl"></i>
         </div>
-        <div class="hidden md:block text-[10px] font-black text-indigo-400 mb-6 tracking-widest">v22.0</div>
 
         <div class="flex md:flex-col gap-1 md:gap-4 w-full md:w-auto justify-around md:justify-start">
             <button id="navCalendar" class="p-3 rounded-xl bg-indigo-600 text-white shadow-lg shadow-indigo-200 transition transform active:scale-95 flex flex-col items-center">
@@ -156,7 +161,7 @@
             <div class="px-6 pt-6 pb-2 flex items-center justify-between">
                 <div>
                     <div class="flex items-center gap-3">
-                        <h2 class="text-3xl font-800 text-slate-800 tracking-tight drop-shadow-sm">Calendar</h2>
+                        <h2 class="text-2xl md:text-3xl font-bold text-slate-800 tracking-tight drop-shadow-sm">Calendar</h2>
                         <span id="activeModelBadge" class="text-[10px] font-bold bg-white/50 px-2 py-1 rounded-lg border border-white/60">...</span>
                     </div>
                     <p id="currentMonthDisplay" class="text-lg font-bold text-indigo-900/60 uppercase tracking-widest mt-1 ml-1">Loading...</p>
@@ -173,7 +178,7 @@
                     <div class="bg-gradient-to-br from-indigo-500 to-purple-600 w-16 h-16 rounded-2xl flex items-center justify-center mb-6 shadow-lg text-white">
                         <i class="fas fa-lock text-2xl"></i>
                     </div>
-                    <h2 class="text-2xl font-bold mb-2">Welcome v22</h2>
+                    <h2 class="text-2xl font-bold mb-2">Welcome v23</h2>
                     <p class="text-sm text-slate-600 mb-6">ログインして全ての機能を利用しましょう。</p>
                     <button id="loginBtnLarge" class="bg-slate-900 text-white px-8 py-3 rounded-xl font-bold shadow-xl hover:scale-105 transition transform w-full">Googleでログイン</button>
                     <div id="authErrorMessage" class="hidden mt-4 p-3 bg-red-100/80 text-red-600 text-xs text-left rounded-xl border border-red-200"></div>
@@ -199,7 +204,7 @@
         <aside id="dayDetailPanel" class="glass w-full md:w-[400px] border-l border-white/50 shadow-2xl z-20 flex flex-col transition-transform duration-500 transform translate-y-full md:translate-y-0 md:translate-x-full fixed md:absolute top-0 right-0 h-full rounded-t-[2.5rem] md:rounded-l-[2.5rem] md:rounded-tr-none overflow-hidden">
             <div class="p-8 border-b border-white/40 flex items-center justify-between bg-white/30">
                 <div>
-                    <h3 id="detailDateDisplay" class="text-3xl font-800 text-slate-800 tracking-tight">Select</h3>
+                    <h3 id="detailDateDisplay" class="text-2xl font-bold text-slate-800 tracking-tight">Select</h3>
                     <p id="detailDayOfWeek" class="text-sm font-bold text-indigo-600 uppercase tracking-widest mt-1 opacity-80">--</p>
                 </div>
                 <button id="closeDetail" class="w-10 h-10 rounded-full bg-white/50 hover:bg-white flex items-center justify-center transition shadow-sm"><i class="fas fa-times text-slate-500"></i></button>
@@ -226,13 +231,14 @@
     <div id="aiModal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-md flex items-center justify-center z-50 hidden p-4 transition-opacity opacity-0 pointer-events-none">
         <div class="glass bg-white/90 rounded-[2.5rem] w-full max-w-lg p-8 shadow-2xl transform scale-95 transition-transform">
             <div class="flex justify-between items-center mb-6">
-                <h3 class="text-2xl font-bold text-slate-800">AI解析</h3>
+                <h3 class="text-xl font-bold text-slate-800">AI解析</h3>
                 <button id="closeAiModal" class="w-10 h-10 rounded-full hover:bg-slate-100 flex items-center justify-center"><i class="fas fa-times"></i></button>
             </div>
             <div id="dropZone" class="border-3 border-dashed border-indigo-200 rounded-[2rem] p-10 text-center hover:border-indigo-500 hover:bg-indigo-50/50 transition cursor-pointer relative overflow-hidden group">
                 <input type="file" id="fileInput" class="hidden" accept="image/*">
                 <i class="fas fa-cloud-upload-alt text-5xl text-indigo-400 mb-4 group-hover:scale-110 transition duration-300"></i>
                 <p class="text-lg font-bold text-slate-700">Upload Image</p>
+                <p class="text-xs text-slate-400 mt-2">スクリーンショットをドロップ</p>
             </div>
             <div id="previewArea" class="mt-6 hidden text-center">
                 <img id="imagePreview" src="" class="rounded-2xl w-full max-h-56 object-contain border-4 border-white shadow-lg">
@@ -338,7 +344,7 @@
         messagingSenderId: "591169343842",
         appId: "1:591169343842:web:4345e3fdff52d4b5cadc3b"
     };
-    const appId = "calendar-ultra-v22";
+    const appId = "calendar-ultra-v23";
 
     const fbApp = initializeApp(firebaseConfig);
     const auth = getAuth(fbApp);
@@ -346,8 +352,8 @@
     const provider = new GoogleAuthProvider();
 
     let user = null, events = [], currentDate = new Date(), selectedDateStr = null, unsubscribe = null;
-    let geminiKey = localStorage.getItem('v22_key') || "", geminiModel = localStorage.getItem('v22_model') || "gemini-1.5-flash";
-    let notificationsEnabled = localStorage.getItem('v22_notify') === 'true';
+    let geminiKey = localStorage.getItem('v23_key') || "", geminiModel = localStorage.getItem('v23_model') || "gemini-1.5-flash";
+    let notificationsEnabled = localStorage.getItem('v23_notify') === 'true';
 
     const getEl = (id) => document.getElementById(id);
     const toggleClass = (id, cls, condition) => getEl(id).classList.toggle(cls, condition);
@@ -375,16 +381,70 @@
         return null;
     }
 
-    // --- Notification ---
+    // --- Notification Logic ---
     function checkNotifications() {
         if (!notificationsEnabled || !user) return;
         const now = new Date();
+        const currentHour = now.getHours();
+        const currentMin = now.getMinutes();
         const todayStr = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
-        // Notification Logic same as previous
+
+        // 朝6:30の通知
+        if (currentHour === 6 && currentMin === 30) {
+            const todayEvents = events.filter(e => e.date === todayStr);
+            if (todayEvents.length > 0 && !hasNotified(`morning_${todayStr}`)) {
+                sendNotification(`今日の予定: ${todayEvents.length}件`, todayEvents.map(e => `・${e.time||''} ${e.title}`).join('\n'));
+                markNotified(`morning_${todayStr}`);
+            }
+        }
+
+        // 予定の1時間前・10分前
+        events.forEach(ev => {
+            if (ev.date === todayStr && ev.time) {
+                const [h, m] = ev.time.split(':').map(Number);
+                const eventTime = new Date(now.getFullYear(), now.getMonth(), now.getDate(), h, m);
+                const diffMin = (eventTime - now) / 1000 / 60;
+
+                if (diffMin >= 59 && diffMin <= 61 && !hasNotified(`1h_${ev.id}`)) {
+                    sendNotification(`1時間前: ${ev.title}`, ev.description || "準備はできましたか？");
+                    markNotified(`1h_${ev.id}`);
+                }
+                if (diffMin >= 9 && diffMin <= 11 && !hasNotified(`10m_${ev.id}`)) {
+                    sendNotification(`まもなく開始: ${ev.title}`, "10分前です");
+                    markNotified(`10m_${ev.id}`);
+                }
+            }
+        });
+    }
+
+    function sendNotification(title, body) {
+        if (Notification.permission === 'granted') {
+            new Notification(title, { body, icon: 'https://cdn-icons-png.flaticon.com/512/2693/2693507.png' });
+        }
+    }
+
+    const notifiedSet = new Set();
+    function hasNotified(key) { return notifiedSet.has(key); }
+    function markNotified(key) { notifiedSet.add(key); }
+    function requestNotifyPermission() {
+        if (!('Notification' in window)) return alert("このブラウザは通知非対応です");
+        Notification.requestPermission().then(p => {
+            if(p === 'granted') {
+                notificationsEnabled = true;
+                localStorage.setItem('v23_notify', 'true');
+                getEl('notificationToggle').checked = true;
+                showNotify("通知をONにしました", "success");
+            } else {
+                notificationsEnabled = false;
+                localStorage.setItem('v23_notify', 'false');
+                getEl('notificationToggle').checked = false;
+                alert("通知がブロックされました");
+            }
+        });
     }
     setInterval(checkNotifications, 60000);
 
-    // --- Main Logic ---
+    // --- Auth & Sync ---
     onAuthStateChanged(auth, (u) => {
         user = u; updateUI();
         if (user) syncData();
@@ -436,7 +496,7 @@
             const items = JSON.parse(data.candidates?.[0]?.content?.parts?.[0]?.text.replace(/```json|```/g, "").trim());
             for (const item of items) if (item.title && item.date) await addDoc(collection(db, 'artifacts', appId, 'users', user.uid, 'events'), { ...item, createdAt: serverTimestamp() });
             showNotify(`${items.length}件登録しました`, "success");
-            hideModal('aiModal');
+            hideModal('aiModal'); getEl('previewArea').classList.add('hidden'); getEl('dropZone').classList.remove('hidden');
         } catch (err) { showNotify(`解析失敗: ${err.message}`, "error"); } finally { setLoading(false); }
     }
 
@@ -503,7 +563,9 @@
         getEl('detailDayOfWeek').textContent = dayText;
 
         const dayEvents = events.filter(e => e.date === dateStr).sort((a,b)=>(a.time||'23:59').localeCompare(b.time||'23:59'));
-        listEl.innerHTML = dayEvents.length ? '' : `<div class="flex flex-col items-center justify-center h-48 text-slate-400/50"><i class="fas fa-mug-hot text-4xl mb-3"></i><p class="text-xs font-bold">No Events</p></div>`;
+        
+        listEl.innerHTML = '';
+        if(dayEvents.length === 0) listEl.innerHTML = `<div class="flex flex-col items-center justify-center h-48 text-slate-400/50"><i class="fas fa-mug-hot text-4xl mb-3"></i><p class="text-xs font-bold">No Events</p></div>`;
 
         dayEvents.forEach(ev => {
             const card = document.createElement('div');
@@ -525,27 +587,93 @@
         });
     }
 
-    // --- Listeners ---
-    getEl('loginBtn').onclick = getEl('loginBtnLarge').onclick = () => signInWithPopup(auth, provider).catch(e => console.error(e));
+    // --- Modal Controls & Listeners ---
+    function openEventForm(id = null) {
+        getEl('formEventId').value = id || "";
+        if (id) {
+            const ev = events.find(e => e.id === id);
+            getEl('formTitle').value = ev.title;
+            getEl('formDate').value = ev.date;
+            getEl('formTime').value = ev.time || "";
+            getEl('formDescription').value = ev.description || "";
+        } else {
+            getEl('eventForm').reset();
+            getEl('formDate').value = selectedDateStr || "";
+        }
+        showModal('eventFormModal');
+    }
+
+    getEl('eventForm').onsubmit = async (e) => {
+        e.preventDefault();
+        const id = getEl('formEventId').value;
+        const data = {
+            title: getEl('formTitle').value,
+            date: getEl('formDate').value,
+            time: getEl('formTime').value,
+            description: getEl('formDescription').value,
+            updatedAt: serverTimestamp()
+        };
+        try {
+            setLoading(true, "Saving...");
+            if (id) await setDoc(doc(db, 'artifacts', appId, 'users', user.uid, 'events', id), data, {merge:true});
+            else { data.createdAt = serverTimestamp(); await addDoc(collection(db, 'artifacts', appId, 'users', user.uid, 'events'), data); }
+            hideModal('eventFormModal');
+            showNotify("Saved", "success");
+        } catch (err) { showNotify(err.message, "error"); } finally { setLoading(false); }
+    };
+
+    getEl('loginBtn').onclick = getEl('loginBtnLarge').onclick = () => signInWithPopup(auth, provider).catch(e => {
+        if(e.code === 'auth/unauthorized-domain') {
+            const em = getEl('authErrorMessage');
+            em.innerHTML = "エラー: Firebaseコンソールでこのドメインを許可してください。";
+            em.classList.remove('hidden');
+        }
+    });
     getEl('logoutBtn').onclick = () => signOut(auth);
     getEl('prevBtn').onclick = () => { currentDate.setMonth(currentDate.getMonth()-1); renderCalendar(); };
     getEl('nextBtn').onclick = () => { currentDate.setMonth(currentDate.getMonth()+1); renderCalendar(); };
-    getEl('closeDetail').onclick = () => { getEl('dayDetailPanel').classList.add('md:translate-x-full', 'translate-y-full'); };
+    getEl('closeDetail').onclick = () => {
+        const panel = getEl('dayDetailPanel');
+        panel.classList.add('md:translate-x-full', 'translate-y-full');
+    };
     getEl('manualAddBtn').onclick = () => openEventForm();
     getEl('closeEventForm').onclick = () => hideModal('eventFormModal');
     
-    getEl('openSettings').onclick = () => { getEl('apiKeyInput').value = geminiKey; showModal('settingsModal'); };
+    getEl('openSettings').onclick = () => { 
+        getEl('apiKeyInput').value = geminiKey; 
+        getEl('notificationToggle').checked = notificationsEnabled;
+        showModal('settingsModal'); 
+    };
     getEl('closeSettings').onclick = () => hideModal('settingsModal');
+    getEl('notificationToggle').onchange = (e) => {
+        if (e.target.checked) requestNotifyPermission();
+        else { notificationsEnabled = false; localStorage.setItem('v23_notify', 'false'); }
+    };
+    getEl('discoverBtn').onclick = async () => {
+        setLoading(true);
+        try {
+            const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${geminiKey}`);
+            const data = await res.json();
+            const select = getEl('modelSelect'); select.innerHTML = '';
+            data.models.filter(m => m.supportedGenerationMethods.includes("generateContent")).forEach(m => {
+                const opt = document.createElement('option');
+                opt.value = m.name.split('/').pop(); opt.textContent = opt.value;
+                if(opt.value === geminiModel) opt.selected = true;
+                select.appendChild(opt);
+            });
+            showNotify("Models Updated", "success");
+        } catch(e) { showNotify("Failed", "error"); } finally { setLoading(false); }
+    };
     getEl('saveSettings').onclick = () => {
         geminiKey = getEl('apiKeyInput').value.trim();
         geminiModel = getEl('modelSelect').value;
-        localStorage.setItem('v22_key', geminiKey); localStorage.setItem('v22_model', geminiModel);
+        localStorage.setItem('v23_key', geminiKey); localStorage.setItem('v23_model', geminiModel);
         showNotify("Saved", "success"); hideModal('settingsModal');
     };
     
-    // AI Modal
+    const closeAiModalHandler = () => { hideModal('aiModal'); getEl('previewArea').classList.add('hidden'); getEl('dropZone').classList.remove('hidden'); };
     getEl('openAiModal').onclick = () => showModal('aiModal');
-    getEl('closeAiModal').onclick = getEl('cancelUpload').onclick = () => hideModal('aiModal');
+    getEl('closeAiModal').onclick = getEl('cancelUpload').onclick = closeAiModalHandler;
     getEl('dropZone').onclick = () => getEl('fileInput').click();
     getEl('fileInput').onchange = (e) => {
         const file = e.target.files[0];
@@ -561,45 +689,13 @@
     };
     getEl('processAiBtn').onclick = () => { if(window._lastImg) analyzeImage(window._lastImg); };
 
-    // Event Form
-    function openEventForm(id = null) {
-        getEl('formEventId').value = id || "";
-        if (id) {
-            const ev = events.find(e => e.id === id);
-            getEl('formTitle').value = ev.title;
-            getEl('formDate').value = ev.date;
-            getEl('formTime').value = ev.time || "";
-            getEl('formDescription').value = ev.description || "";
-        } else {
-            getEl('eventForm').reset();
-            getEl('formDate').value = selectedDateStr || "";
-        }
-        showModal('eventFormModal');
-    }
-    getEl('eventForm').onsubmit = async (e) => {
-        e.preventDefault();
-        const id = getEl('formEventId').value;
-        const data = {
-            title: getEl('formTitle').value,
-            date: getEl('formDate').value,
-            time: getEl('formTime').value,
-            description: getEl('formDescription').value,
-            updatedAt: serverTimestamp()
-        };
-        try {
-            setLoading(true);
-            if (id) await setDoc(doc(db, 'artifacts', appId, 'users', user.uid, 'events', id), data, {merge:true});
-            else { data.createdAt = serverTimestamp(); await addDoc(collection(db, 'artifacts', appId, 'users', user.uid, 'events'), data); }
-            hideModal('eventFormModal');
-            showNotify("Saved", "success");
-        } catch (err) { showNotify(err.message, "error"); } finally { setLoading(false); }
-    };
-
     async function deleteEvent(id) { await deleteDoc(doc(db, 'artifacts', appId, 'users', user.uid, 'events', id)); showNotify("Deleted", "success"); }
     function setLoading(is, msg) { if (msg) getEl('loadingMessage').textContent = msg; getEl('loadingOverlay').classList.toggle('hidden', !is); }
     function showNotify(txt, type) {
         const n = getEl('notification'); getEl('notifyText').textContent = txt;
-        n.className = `fixed top-6 left-1/2 transform -translate-x-1/2 px-6 py-3 rounded-full shadow-lg z-[100] flex items-center space-x-3 min-w-[200px] text-white transition-all duration-300 ${type==='success'?'bg-emerald-500':'bg-red-500'}`;
+        const icon = getEl('notifyIcon');
+        n.className = `fixed top-6 left-1/2 transform -translate-x-1/2 px-6 py-3 rounded-full shadow-lg z-[100] flex items-center space-x-3 min-w-[300px] text-white transition-all duration-300 ${type==='success'?'bg-emerald-500':'bg-red-500'}`;
+        icon.innerHTML = type==='success'?'<i class="fas fa-check"></i>':'<i class="fas fa-exclamation"></i>';
         n.classList.remove('translate-y-[-150%]', 'opacity-0');
         setTimeout(() => n.classList.add('translate-y-[-150%]', 'opacity-0'), 4000);
     }
