@@ -549,7 +549,7 @@
             if (id) await setDoc(doc(db, 'artifacts', appId, 'users', user.uid, 'events', id), data, {merge:true});
             else { data.createdAt = serverTimestamp(); await addDoc(collection(db, 'artifacts', appId, 'users', user.uid, 'events'), data); }
             closeEventFormHandler();
-            showNotify("保存しました", "success");
+            showNotify("保存しました!", "success");
         } catch (err) { showNotify(err.message, "error"); } finally { setLoading(false); }
     };
 
