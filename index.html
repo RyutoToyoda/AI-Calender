@@ -3,236 +3,212 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>AI Calendar - Modern Dashboard</title>
+    <title>AI Calendar - Ultra Modern</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
+        :root { --glass-border: rgba(255, 255, 255, 0.4); --glass-bg: rgba(255, 255, 255, 0.65); }
         body { 
             font-family: 'Plus Jakarta Sans', 'Noto Sans JP', sans-serif; 
             overflow: hidden; 
-            -webkit-tap-highlight-color: transparent;
-            background: #f3f4f6; /* fallback */
-            background: linear-gradient(135deg, #f0f4ff 0%, #fdf2f8 100%);
+            background: linear-gradient(135deg, #e0c3fc 0%, #8ec5fc 100%);
+            color: #1e293b;
         }
         
-        /* カスタムスクロールバー */
-        .custom-scroll::-webkit-scrollbar { width: 0px; background: transparent; } /* スクロールバー非表示でスッキリさせる */
-        
+        /* ガラス効果の共通クラス */
+        .glass {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.1);
+        }
+
         /* カレンダーグリッド */
         .calendar-grid { 
             display: grid; 
             grid-template-columns: repeat(7, 1fr); 
-            gap: 8px; /* グリッドの隙間 */
-            padding: 8px;
+            gap: 12px; 
+            padding: 12px;
         }
 
-        /* 日付セル：カードスタイル */
-        .day-cell { 
-            min-height: 100px;
-            height: calc((100vh - 180px) / 5.5); 
-            display: flex;
-            flex-direction: column; 
-            background: rgba(255, 255, 255, 0.6);
+        /* 日付カード */
+        .day-card { 
+            min-height: 90px;
+            height: calc((100vh - 140px) / 5.5); /* 高さ自動計算 */
+            background: rgba(255, 255, 255, 0.5);
             border-radius: 16px;
-            position: relative; 
             padding: 8px; 
-            overflow: hidden; 
+            position: relative;
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            border: 1px solid transparent;
             cursor: pointer;
-            transition: all 0.25s cubic-bezier(0.25, 0.8, 0.25, 1);
-            border: 1px solid rgba(255,255,255,0.8);
+            overflow: hidden;
+            display: flex; 
+            flex-direction: column;
         }
 
         @media (max-width: 768px) {
-            .calendar-grid { gap: 4px; padding: 4px; }
-            .day-cell { 
-                height: calc((100vh - 280px) / 6); 
-                padding: 4px; 
-                min-height: 70px; 
-                border-radius: 10px;
-            }
+            .calendar-grid { gap: 6px; padding: 6px; }
+            .day-card { border-radius: 10px; height: calc((100vh - 220px) / 6); min-height: 70px; padding: 4px; }
         }
 
-        .day-cell:hover { 
+        .day-card:hover { 
             background: rgba(255, 255, 255, 0.9); 
-            transform: translateY(-2px); 
-            box-shadow: 0 10px 20px -5px rgba(0,0,0,0.05);
+            transform: translateY(-4px); 
+            box-shadow: 0 12px 24px -8px rgba(0, 0, 0, 0.15);
             z-index: 10;
         }
         
-        .day-cell.selected { 
+        .day-card.selected { 
             background: #fff;
-            box-shadow: 0 0 0 2px #6366f1, 0 10px 20px -5px rgba(99, 102, 241, 0.2);
+            border-color: #8b5cf6;
+            box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.3);
         }
         
-        .today { background: rgba(255, 255, 255, 0.9); }
+        .today { background: rgba(255, 255, 255, 0.8); }
         .today .day-num { 
-            background: linear-gradient(135deg, #6366f1, #8b5cf6); 
+            background: linear-gradient(135deg, #8b5cf6, #6366f1); 
             color: white; 
-            box-shadow: 0 4px 10px rgba(99, 102, 241, 0.3);
+            box-shadow: 0 4px 10px rgba(139, 92, 246, 0.4);
         }
 
         .day-num {
+            width: 28px; height: 28px;
+            display: flex; align-items: center; justify-content: center;
+            border-radius: 10px; margin-bottom: 4px;
+            font-weight: 700; color: #64748b;
             font-size: 0.9rem;
-            font-weight: 700;
-            width: 28px;
-            height: 28px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 10px;
-            margin-bottom: 4px;
-            color: #64748b;
-            transition: all 0.2s;
         }
 
-        /* 予定チップ：ピル型 */
-        .event-chip { 
-            font-size: 0.7rem; 
+        /* 予定チップ */
+        .event-pill { 
+            font-size: 0.65rem; 
             padding: 3px 8px; 
-            border-radius: 99px; 
+            border-radius: 20px; 
             margin-bottom: 3px; 
+            white-space: nowrap; 
             overflow: hidden; 
             text-overflow: ellipsis; 
-            white-space: nowrap; 
-            background: #eef2ff; 
-            color: #4338ca; 
+            background: #f3e8ff; 
+            color: #6b21a8; 
             font-weight: 600;
-            border: 1px solid #e0e7ff;
+            border: 1px solid #e9d5ff;
             transition: transform 0.2s;
         }
-        .event-chip:hover { transform: scale(1.02); }
+        .event-pill:hover { transform: scale(1.02); }
 
-        /* オーバーレイ＆モーダル */
-        .glass-panel {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.5);
-        }
-
-        .loading-overlay { background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(15px); z-index: 100; }
+        .custom-scroll::-webkit-scrollbar { width: 0px; background: transparent; }
         .spinner { animation: spin 1s linear infinite; }
         @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
         
         .safe-pb { padding-bottom: env(safe-area-inset-bottom); }
     </style>
 </head>
-<body class="text-slate-800 h-screen w-screen flex overflow-hidden">
+<body class="h-screen w-screen flex flex-col md:flex-row overflow-hidden text-slate-800">
 
     <!-- Sidebar (PC) / Bottom Nav (Mobile) -->
-    <nav class="fixed bottom-0 left-0 w-full h-16 bg-white border-t border-slate-100 z-50 md:relative md:w-24 md:h-full md:border-t-0 md:border-r md:flex md:flex-col md:items-center md:py-8 glass-panel shadow-lg md:shadow-none flex justify-around items-center px-2">
+    <nav class="glass z-50 flex md:flex-col justify-between items-center p-2 md:py-6 md:px-3 fixed md:relative bottom-0 w-full md:w-24 md:h-full border-t md:border-t-0 md:border-r border-white/40 shadow-xl order-2 md:order-1 h-16">
         <!-- Logo -->
-        <div class="hidden md:flex bg-indigo-600 w-12 h-12 rounded-2xl items-center justify-center text-white shadow-lg shadow-indigo-200 mb-8">
-            <i class="fas fa-calendar-check text-xl"></i>
+        <div class="hidden md:flex bg-white/80 w-12 h-12 rounded-2xl items-center justify-center text-indigo-600 shadow-sm mb-8">
+            <i class="fas fa-calendar-check text-2xl"></i>
         </div>
 
-        <!-- Nav Items -->
-        <button id="navCalendar" class="flex flex-col items-center justify-center w-12 h-12 rounded-xl text-indigo-600 bg-indigo-50 md:mb-4 transition">
-            <i class="fas fa-calendar-alt text-xl mb-0.5"></i>
-            <span class="text-[9px] font-bold md:hidden">カレンダー</span>
-        </button>
+        <!-- Actions -->
+        <div class="flex md:flex-col gap-1 md:gap-4 w-full md:w-auto justify-around md:justify-start">
+            <button id="navCalendar" class="p-3 rounded-xl bg-indigo-600 text-white shadow-lg shadow-indigo-200 transition transform active:scale-95 flex flex-col items-center">
+                <i class="fas fa-calendar-alt text-lg"></i>
+            </button>
+            <button id="openAiModal" class="p-3 rounded-xl text-slate-500 hover:bg-white/50 hover:text-indigo-600 transition flex flex-col items-center disabled:opacity-40" disabled>
+                <i class="fas fa-magic text-lg"></i>
+            </button>
+            <button id="openSettings" class="p-3 rounded-xl text-slate-500 hover:bg-white/50 hover:text-indigo-600 transition flex flex-col items-center">
+                <i class="fas fa-cog text-lg"></i>
+            </button>
+        </div>
 
-        <button id="openAiModal" class="flex flex-col items-center justify-center w-12 h-12 rounded-xl text-slate-400 hover:text-indigo-600 hover:bg-slate-50 md:mb-4 transition disabled:opacity-30" disabled>
-            <i class="fas fa-wand-magic-sparkles text-xl mb-0.5"></i>
-            <span class="text-[9px] font-bold md:hidden">AI解析</span>
-        </button>
-
-        <button id="openSettings" class="flex flex-col items-center justify-center w-12 h-12 rounded-xl text-slate-400 hover:text-indigo-600 hover:bg-slate-50 md:mb-4 transition">
-            <i class="fas fa-cog text-xl mb-0.5"></i>
-            <span class="text-[9px] font-bold md:hidden">設定</span>
-        </button>
-
-        <!-- Spacer for PC -->
+        <!-- Spacer -->
         <div class="hidden md:block flex-grow"></div>
 
-        <!-- User Profile -->
+        <!-- Auth -->
         <div id="authArea" class="relative">
-            <button id="loginBtn" class="flex flex-col items-center justify-center w-12 h-12 rounded-xl text-slate-400 hover:text-indigo-600 hover:bg-slate-50 transition">
-                <i class="fas fa-sign-in-alt text-xl mb-0.5"></i>
-                <span class="text-[9px] font-bold md:hidden">ログイン</span>
-            </button>
-            <div id="userProfile" class="hidden flex-col items-center gap-3">
-                <button id="logoutBtn" class="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 hover:bg-red-50 hover:text-red-500 transition shadow-sm"><i class="fas fa-power-off text-sm"></i></button>
-                <img id="userPhoto" src="" class="w-10 h-10 rounded-full border-2 border-white shadow-md cursor-pointer" alt="U">
+            <button id="loginBtn" class="p-2 text-xs font-bold bg-white rounded-lg shadow-sm text-indigo-600 md:hidden">ログイン</button>
+            <div id="userProfile" class="hidden flex-col gap-4 items-center">
+                <img id="userPhoto" src="" class="w-10 h-10 rounded-full border-2 border-white shadow-md cursor-pointer" alt="User">
+                <button id="logoutBtn" class="text-slate-400 hover:text-red-500 transition"><i class="fas fa-sign-out-alt"></i></button>
             </div>
         </div>
     </nav>
 
     <!-- Main Content -->
-    <main class="flex-grow flex flex-col md:flex-row relative h-full w-full pb-16 md:pb-0">
+    <main class="flex-grow flex flex-col md:flex-row relative h-full w-full order-1 md:order-2 overflow-hidden">
         
         <!-- Calendar Section -->
         <div id="calendarArea" class="flex-grow flex flex-col h-full relative z-0">
-            <!-- Top Bar -->
-            <div class="px-6 py-4 md:py-6 flex items-center justify-between">
+            <!-- Header Bar -->
+            <div class="px-6 pt-6 pb-2 flex items-center justify-between">
                 <div>
-                    <h2 class="text-2xl md:text-3xl font-extrabold text-slate-800 tracking-tight">Calendar</h2>
-                    <div class="flex items-center space-x-2 mt-1">
-                        <span class="w-2 h-2 bg-emerald-400 rounded-full"></span>
-                        <p id="currentMonthDisplay" class="text-sm font-bold text-slate-500 uppercase tracking-wider">2024 May</p>
+                    <div class="flex items-center gap-3">
+                        <h2 class="text-3xl font-800 text-slate-800 tracking-tight drop-shadow-sm">Calendar</h2>
+                        <span id="activeModelBadge" class="text-[10px] font-bold bg-white/50 px-2 py-1 rounded-lg border border-white/60">...</span>
                     </div>
+                    <p id="currentMonthDisplay" class="text-lg font-bold text-indigo-900/60 uppercase tracking-widest mt-1 ml-1">Loading...</p>
                 </div>
-                <div class="flex bg-white rounded-2xl p-1 shadow-sm border border-slate-200">
-                    <button id="prevBtn" class="w-10 h-10 flex items-center justify-center rounded-xl hover:bg-slate-50 text-slate-600 transition"><i class="fas fa-chevron-left"></i></button>
-                    <button id="nextBtn" class="w-10 h-10 flex items-center justify-center rounded-xl hover:bg-slate-50 text-slate-600 transition"><i class="fas fa-chevron-right"></i></button>
-                </div>
-            </div>
-
-            <!-- Calendar View -->
-            <div id="calendarWrapper" class="flex-grow px-4 pb-4 md:px-8 md:pb-8 overflow-hidden flex flex-col hidden">
-                <!-- Week Header -->
-                <div class="grid grid-cols-7 gap-2 mb-2 px-2 text-center">
-                    <div class="text-[10px] font-black text-red-400 uppercase tracking-widest">Sun</div>
-                    <div class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Mon</div>
-                    <div class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Tue</div>
-                    <div class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Wed</div>
-                    <div class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Thu</div>
-                    <div class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Fri</div>
-                    <div class="text-[10px] font-black text-blue-400 uppercase tracking-widest">Sat</div>
-                </div>
-                
-                <!-- Grid -->
-                <div id="calendarGrid" class="calendar-grid overflow-y-auto custom-scroll h-full">
-                    <!-- Cells injected by JS -->
+                <div class="glass rounded-2xl p-1 flex shadow-sm">
+                    <button id="prevBtn" class="w-10 h-10 flex items-center justify-center rounded-xl hover:bg-white/50 transition"><i class="fas fa-chevron-left text-slate-600"></i></button>
+                    <button id="nextBtn" class="w-10 h-10 flex items-center justify-center rounded-xl hover:bg-white/50 transition"><i class="fas fa-chevron-right text-slate-600"></i></button>
                 </div>
             </div>
 
             <!-- Login Prompt -->
-            <div id="loginPrompt" class="absolute inset-0 flex flex-col items-center justify-center bg-white/50 backdrop-blur-sm z-10 hidden">
-                <div class="bg-white p-10 rounded-[3rem] shadow-2xl flex flex-col items-center text-center max-w-sm mx-4 border border-white">
-                    <div class="bg-indigo-600 w-20 h-20 rounded-3xl flex items-center justify-center mb-6 shadow-xl shadow-indigo-200 transform -rotate-6">
-                        <i class="fas fa-lock text-3xl text-white"></i>
+            <div id="loginPrompt" class="absolute inset-0 z-20 flex flex-col items-center justify-center bg-white/30 backdrop-blur-md hidden">
+                <div class="glass p-10 rounded-3xl shadow-2xl flex flex-col items-center text-center max-w-sm mx-4">
+                    <div class="bg-gradient-to-br from-indigo-500 to-purple-600 w-16 h-16 rounded-2xl flex items-center justify-center mb-6 shadow-lg text-white">
+                        <i class="fas fa-lock text-2xl"></i>
                     </div>
-                    <h2 class="text-2xl font-black text-slate-800 mb-3">Login Required</h2>
-                    <p class="text-slate-500 mb-8 text-sm font-medium leading-relaxed">Googleアカウントでログインして<br>スマートな予定管理を始めましょう。</p>
-                    <button id="loginBtnLarge" class="bg-slate-900 text-white px-8 py-4 rounded-2xl font-bold shadow-xl hover:scale-105 transition transform w-full">Googleでログイン</button>
+                    <h2 class="text-2xl font-bold mb-2">Welcome Back</h2>
+                    <p class="text-sm text-slate-600 mb-8">Googleアカウントでログインして<br>全ての機能を利用しましょう。</p>
+                    <button id="loginBtnLarge" class="bg-slate-900 text-white px-8 py-3 rounded-xl font-bold shadow-xl hover:scale-105 transition transform w-full">Sign in with Google</button>
                 </div>
+            </div>
+
+            <!-- Calendar View -->
+            <div id="calendarWrapper" class="flex-grow p-2 md:p-4 overflow-hidden flex flex-col hidden">
+                <!-- Week Header -->
+                <div class="grid grid-cols-7 gap-2 mb-2 px-2 text-center">
+                    <div class="text-xs font-bold text-red-400">SUN</div>
+                    <div class="text-xs font-bold text-slate-500">MON</div>
+                    <div class="text-xs font-bold text-slate-500">TUE</div>
+                    <div class="text-xs font-bold text-slate-500">WED</div>
+                    <div class="text-xs font-bold text-slate-500">THU</div>
+                    <div class="text-xs font-bold text-slate-500">FRI</div>
+                    <div class="text-xs font-bold text-blue-400">SAT</div>
+                </div>
+                <!-- Grid -->
+                <div id="calendarGrid" class="calendar-grid overflow-y-auto custom-scroll h-full"></div>
             </div>
         </div>
 
-        <!-- Detail Side Panel (Slide Over) -->
-        <aside id="dayDetailPanel" class="w-full md:w-[400px] bg-white/80 glass-panel border-l border-white shadow-2xl z-20 flex flex-col transition-transform duration-500 transform translate-y-full md:translate-y-0 md:translate-x-full fixed md:absolute top-0 right-0 h-full rounded-t-[3rem] md:rounded-l-[3rem] md:rounded-tr-none overflow-hidden">
-            
-            <div class="p-8 border-b border-slate-100/50 flex items-center justify-between">
+        <!-- Detail Panel (Right Sidebar) -->
+        <aside id="dayDetailPanel" class="glass w-full md:w-[400px] border-l border-white/50 shadow-2xl z-20 flex flex-col transition-transform duration-500 transform translate-y-full md:translate-y-0 md:translate-x-full fixed md:absolute top-0 right-0 h-full rounded-t-[2.5rem] md:rounded-l-[2.5rem] md:rounded-tr-none overflow-hidden">
+            <div class="p-8 border-b border-white/40 flex items-center justify-between bg-white/30">
                 <div>
-                    <h3 id="detailDateDisplay" class="text-3xl font-black text-slate-800 tracking-tight">Select Date</h3>
-                    <p id="detailDayOfWeek" class="text-sm font-bold text-indigo-500 uppercase tracking-widest mt-1 opacity-80">--</p>
+                    <h3 id="detailDateDisplay" class="text-3xl font-800 text-slate-800 tracking-tight">Select</h3>
+                    <p id="detailDayOfWeek" class="text-sm font-bold text-indigo-600 uppercase tracking-widest mt-1 opacity-80">--</p>
                 </div>
-                <button id="closeDetail" class="w-10 h-10 rounded-full bg-slate-100 text-slate-400 hover:bg-slate-200 flex items-center justify-center transition"><i class="fas fa-times"></i></button>
+                <button id="closeDetail" class="w-10 h-10 rounded-full bg-white/50 hover:bg-white flex items-center justify-center transition shadow-sm"><i class="fas fa-times text-slate-500"></i></button>
             </div>
 
-            <div id="detailEventList" class="flex-grow p-6 space-y-4 overflow-y-auto custom-scroll">
-                <!-- Events injected here -->
-                <div class="flex flex-col items-center justify-center h-full text-slate-300">
-                    <i class="fas fa-calendar-day text-6xl mb-6 opacity-20"></i>
-                    <p class="text-sm font-bold opacity-60">日付を選択してください</p>
+            <div id="detailEventList" class="flex-grow p-6 space-y-4 overflow-y-auto custom-scroll bg-white/20">
+                <div class="flex flex-col items-center justify-center h-full text-slate-400">
+                    <i class="fas fa-hand-pointer text-4xl mb-4 opacity-30"></i>
+                    <p class="text-sm font-bold opacity-70">日付を選択してください</p>
                 </div>
             </div>
 
-            <div class="p-6 bg-white/50 border-t border-slate-100 safe-pb">
-                <button id="manualAddBtn" class="w-full py-4 bg-indigo-600 text-white font-bold rounded-2xl shadow-xl shadow-indigo-200 hover:bg-indigo-700 transition transform active:scale-95 flex items-center justify-center gap-2">
+            <div class="p-6 bg-white/40 border-t border-white/40 safe-pb backdrop-blur-md">
+                <button id="manualAddBtn" class="w-full py-4 bg-slate-900 text-white font-bold rounded-2xl shadow-xl hover:bg-slate-800 transition transform active:scale-95 flex items-center justify-center gap-2">
                     <i class="fas fa-plus"></i> 新しい予定を追加
                 </button>
             </div>
@@ -242,101 +218,98 @@
 
     <!-- Modals -->
     
+    <!-- AI Modal -->
+    <div id="aiModal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-md flex items-center justify-center z-50 hidden p-4 transition-opacity opacity-0 pointer-events-none">
+        <div class="glass bg-white/90 rounded-[2.5rem] w-full max-w-lg p-8 shadow-2xl transform scale-95 transition-transform">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-2xl font-bold text-slate-800">AI解析</h3>
+                <button id="closeAiModal" class="w-10 h-10 rounded-full hover:bg-slate-100 flex items-center justify-center"><i class="fas fa-times"></i></button>
+            </div>
+            <div id="dropZone" class="border-3 border-dashed border-indigo-200 rounded-[2rem] p-10 text-center hover:border-indigo-500 hover:bg-indigo-50/50 transition cursor-pointer relative overflow-hidden group">
+                <input type="file" id="fileInput" class="hidden" accept="image/*">
+                <i class="fas fa-cloud-upload-alt text-5xl text-indigo-400 mb-4 group-hover:scale-110 transition duration-300"></i>
+                <p class="text-lg font-bold text-slate-700">画像をアップロード</p>
+                <p class="text-xs text-slate-400 mt-2">スクリーンショットをドロップ</p>
+            </div>
+            <div id="previewArea" class="mt-6 hidden text-center">
+                <img id="imagePreview" src="" class="rounded-2xl w-full max-h-56 object-contain border-4 border-white shadow-lg">
+            </div>
+            <div class="mt-8 flex gap-3">
+                <button id="cancelUpload" class="flex-1 py-3 text-slate-500 font-bold hover:bg-slate-100 rounded-xl transition">キャンセル</button>
+                <button id="processAiBtn" class="flex-1 py-3 bg-indigo-600 text-white font-bold rounded-xl shadow-lg disabled:opacity-50 disabled:shadow-none transition transform active:scale-95" disabled>解析開始</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Event Form Modal -->
-    <div id="eventFormModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-md flex items-center justify-center z-50 hidden p-4 opacity-0 transition-opacity duration-300 pointer-events-none">
-        <div class="bg-white rounded-[2.5rem] w-full max-w-lg p-8 shadow-2xl transform scale-95 transition-transform duration-300">
-            <h3 class="text-2xl font-black text-slate-800 mb-6">予定を編集</h3>
-            <form id="eventForm" class="space-y-5">
+    <div id="eventFormModal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-md flex items-center justify-center z-50 hidden p-4 transition-opacity opacity-0 pointer-events-none">
+        <div class="glass bg-white/90 rounded-[2.5rem] w-full max-w-lg p-8 shadow-2xl transform scale-95 transition-transform">
+            <h3 class="text-xl font-bold mb-6">予定の編集</h3>
+            <form id="eventForm" class="space-y-4">
                 <input type="hidden" id="formEventId">
-                <div class="space-y-2">
-                    <label class="text-xs font-bold text-slate-400 uppercase tracking-wider">Title</label>
-                    <input type="text" id="formTitle" required class="w-full px-5 py-4 bg-slate-50 border-2 border-slate-100 rounded-2xl outline-none focus:border-indigo-500 focus:bg-white transition font-bold text-lg text-slate-800" placeholder="予定のタイトル">
+                <div class="space-y-1">
+                    <label class="text-xs font-bold text-slate-400 uppercase ml-2">タイトル</label>
+                    <input type="text" id="formTitle" required class="w-full px-5 py-3 bg-white/50 border border-slate-200 rounded-xl outline-none focus:border-indigo-500 transition font-bold">
                 </div>
-                <div class="grid grid-cols-2 gap-4">
-                    <div class="space-y-2">
-                        <label class="text-xs font-bold text-slate-400 uppercase tracking-wider">Date</label>
-                        <input type="date" id="formDate" required class="w-full px-5 py-4 bg-slate-50 border-2 border-slate-100 rounded-2xl outline-none focus:border-indigo-500 font-bold text-slate-700">
+                <div class="grid grid-cols-2 gap-3">
+                    <div class="space-y-1">
+                        <label class="text-xs font-bold text-slate-400 uppercase ml-2">日付</label>
+                        <input type="date" id="formDate" required class="w-full px-5 py-3 bg-white/50 border border-slate-200 rounded-xl font-medium">
                     </div>
-                    <div class="space-y-2">
-                        <label class="text-xs font-bold text-slate-400 uppercase tracking-wider">Time</label>
-                        <input type="time" id="formTime" class="w-full px-5 py-4 bg-slate-50 border-2 border-slate-100 rounded-2xl outline-none focus:border-indigo-500 font-bold text-slate-700">
+                    <div class="space-y-1">
+                        <label class="text-xs font-bold text-slate-400 uppercase ml-2">時刻</label>
+                        <input type="time" id="formTime" class="w-full px-5 py-3 bg-white/50 border border-slate-200 rounded-xl font-medium">
                     </div>
                 </div>
-                <div class="space-y-2">
-                    <label class="text-xs font-bold text-slate-400 uppercase tracking-wider">Memo</label>
-                    <textarea id="formDescription" rows="3" class="w-full px-5 py-4 bg-slate-50 border-2 border-slate-100 rounded-2xl outline-none focus:border-indigo-500 transition font-medium text-slate-600 resize-none" placeholder="詳細を入力..."></textarea>
+                <div class="space-y-1">
+                    <label class="text-xs font-bold text-slate-400 uppercase ml-2">メモ</label>
+                    <textarea id="formDescription" rows="3" class="w-full px-5 py-3 bg-white/50 border border-slate-200 rounded-xl outline-none focus:border-indigo-500 transition resize-none"></textarea>
                 </div>
-                <div class="flex space-x-3 pt-4">
-                    <button type="button" id="closeEventForm" class="flex-1 py-4 text-slate-500 font-bold hover:bg-slate-100 rounded-2xl transition">キャンセル</button>
-                    <button type="submit" class="flex-1 py-4 bg-indigo-600 text-white font-bold rounded-2xl shadow-lg hover:bg-indigo-700 transition transform active:scale-95">保存</button>
+                <div class="flex gap-3 pt-4">
+                    <button type="button" id="closeEventForm" class="flex-1 py-3 text-slate-500 font-bold hover:bg-slate-100 rounded-xl transition">キャンセル</button>
+                    <button type="submit" class="flex-1 py-3 bg-indigo-600 text-white font-bold rounded-xl shadow-lg hover:bg-indigo-700 transition transform active:scale-95">保存</button>
                 </div>
             </form>
         </div>
     </div>
 
     <!-- Settings Modal -->
-    <div id="settingsModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-md flex items-center justify-center z-50 hidden p-4">
-        <div class="bg-white rounded-[2.5rem] w-full max-w-md p-8 shadow-2xl">
-            <h3 class="text-2xl font-black text-slate-800 mb-6">Settings</h3>
-            <div class="space-y-5">
-                <div class="space-y-2">
-                    <label class="text-xs font-bold text-slate-400 uppercase tracking-wider">Gemini API Key</label>
-                    <input type="password" id="apiKeyInput" class="w-full px-5 py-4 bg-slate-50 border-2 border-slate-100 rounded-2xl outline-none focus:border-indigo-500 transition font-mono text-sm" placeholder="AIzaSy...">
+    <div id="settingsModal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-md flex items-center justify-center z-50 hidden p-4 transition-opacity opacity-0 pointer-events-none">
+        <div class="glass bg-white/90 rounded-[2.5rem] w-full max-w-md p-8 shadow-2xl">
+            <h3 class="text-xl font-bold mb-6">設定</h3>
+            <div class="space-y-4">
+                <div class="space-y-1">
+                    <label class="text-xs font-bold text-slate-400 uppercase ml-2">Gemini API Key</label>
+                    <input type="password" id="apiKeyInput" class="w-full px-5 py-3 bg-white/50 border border-slate-200 rounded-xl outline-none focus:border-indigo-500 transition font-mono text-sm">
                 </div>
-                <div class="space-y-2">
-                    <label class="text-xs font-bold text-slate-400 uppercase tracking-wider">Active Model</label>
-                    <div class="flex space-x-2">
-                        <select id="modelSelect" class="flex-grow px-5 py-4 bg-slate-50 border-2 border-slate-100 rounded-2xl font-bold text-sm outline-none focus:border-indigo-500 cursor-pointer">
+                <div class="space-y-1">
+                    <label class="text-xs font-bold text-slate-400 uppercase ml-2">Model</label>
+                    <div class="flex gap-2">
+                        <select id="modelSelect" class="flex-grow px-5 py-3 bg-white/50 border border-slate-200 rounded-xl font-bold text-sm">
                             <option value="gemini-1.5-flash">gemini-1.5-flash</option>
                             <option value="gemini-2.0-flash-exp">gemini-2.0-flash-exp</option>
                         </select>
-                        <button id="discoverBtn" class="bg-indigo-50 text-indigo-600 w-14 rounded-2xl flex items-center justify-center hover:bg-indigo-100 border-2 border-indigo-100 transition"><i class="fas fa-search"></i></button>
+                        <button id="discoverBtn" class="bg-white text-indigo-600 w-12 rounded-xl border border-slate-200 hover:bg-indigo-50"><i class="fas fa-search"></i></button>
                     </div>
                 </div>
-                <div class="flex space-x-3 pt-4">
-                    <button id="closeSettings" class="flex-1 py-4 text-slate-500 font-bold hover:bg-slate-100 rounded-2xl transition">閉じる</button>
-                    <button id="saveSettings" class="flex-1 py-4 bg-indigo-600 text-white font-bold rounded-2xl shadow-lg hover:bg-indigo-700 transition">保存</button>
+                <div class="flex gap-3 pt-4">
+                    <button id="closeSettings" class="flex-1 py-3 text-slate-500 font-bold hover:bg-slate-100 rounded-xl transition">閉じる</button>
+                    <button id="saveSettings" class="flex-1 py-3 bg-indigo-600 text-white font-bold rounded-xl shadow-lg hover:bg-indigo-700 transition">保存</button>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- AI Modal -->
-    <div id="aiModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-md flex items-center justify-center z-50 hidden p-4">
-        <div class="bg-white rounded-[2.5rem] w-full max-w-lg p-8 shadow-2xl">
-            <div class="flex justify-between items-center mb-6">
-                <h3 class="text-2xl font-black text-slate-800">AI解析</h3>
-                <button id="closeAiModal" class="w-10 h-10 rounded-full bg-slate-50 hover:bg-slate-100 flex items-center justify-center text-slate-400 transition"><i class="fas fa-times"></i></button>
-            </div>
-            <div id="dropZone" class="border-3 border-dashed border-slate-200 rounded-[2rem] p-12 text-center hover:border-indigo-400 hover:bg-indigo-50/30 transition bg-slate-50/50 group cursor-pointer relative overflow-hidden">
-                <input type="file" id="fileInput" class="hidden" accept="image/*">
-                <div class="relative z-10 transition-transform duration-300 group-hover:scale-110">
-                    <div class="bg-white w-20 h-20 rounded-3xl shadow-sm flex items-center justify-center mx-auto mb-4">
-                        <i class="fas fa-cloud-upload-alt text-4xl text-indigo-500"></i>
-                    </div>
-                    <p class="text-lg font-bold text-slate-700">Upload Image</p>
-                    <p class="text-xs text-slate-400 mt-1">Click or Drop Screenshot</p>
-                </div>
-            </div>
-            <div id="previewArea" class="mt-6 hidden text-center">
-                <img id="imagePreview" src="" class="rounded-2xl w-full max-h-56 object-contain border-4 border-slate-100 shadow-lg">
-            </div>
-            <div class="mt-8 flex space-x-3">
-                <button id="cancelUpload" class="flex-1 py-4 text-slate-500 font-bold hover:bg-slate-100 rounded-2xl transition">キャンセル</button>
-                <button id="processAiBtn" class="flex-1 py-4 bg-indigo-600 text-white font-bold rounded-2xl shadow-xl disabled:opacity-50 disabled:shadow-none transition transform active:scale-95" disabled>解析を開始</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Overlays -->
+    <!-- Loading -->
     <div id="loadingOverlay" class="fixed inset-0 loading-overlay flex items-center justify-center hidden">
-        <div class="bg-white/80 backdrop-blur-xl px-12 py-10 rounded-[2.5rem] shadow-2xl border border-white flex flex-col items-center">
-            <i class="fas fa-circle-notch spinner text-4xl text-indigo-600 mb-4"></i>
-            <p id="loadingMessage" class="text-base font-bold text-slate-800">Processing...</p>
+        <div class="glass bg-white/80 px-8 py-6 rounded-3xl shadow-2xl flex flex-col items-center">
+            <i class="fas fa-circle-notch spinner text-3xl text-indigo-600 mb-3"></i>
+            <p id="loadingMessage" class="text-sm font-bold text-slate-700">Loading...</p>
         </div>
     </div>
 
-    <div id="notification" class="fixed top-6 left-1/2 transform -translate-x-1/2 px-6 py-3 rounded-full shadow-2xl translate-y-[-150%] opacity-0 transition-all duration-300 z-[100] flex items-center space-x-3 min-w-[300px] bg-slate-900 text-white border border-slate-700">
+    <!-- Notification -->
+    <div id="notification" class="fixed top-6 left-1/2 transform -translate-x-1/2 px-6 py-3 rounded-full shadow-xl translate-y-[-150%] opacity-0 transition-all duration-300 z-[100] flex items-center space-x-3 min-w-[280px] bg-slate-900 text-white">
         <div id="notifyIcon"></div>
         <p id="notifyText" class="text-sm font-bold"></p>
     </div>
@@ -346,7 +319,7 @@
     import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
     import { getFirestore, collection, doc, onSnapshot, addDoc, setDoc, deleteDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-    // --- Firebase Config ---
+    // --- Config ---
     const firebaseConfig = {
         apiKey: "AIzaSyA9MeRV2VefKb5cOJLzegq3U6EsBEB2axg",
         authDomain: "my-ai-calender-68d05.firebaseapp.com",
@@ -355,7 +328,7 @@
         messagingSenderId: "591169343842",
         appId: "1:591169343842:web:4345e3fdff52d4b5cadc3b"
     };
-    const appId = "calendar-modern-v17";
+    const appId = "calendar-ultra-v18";
 
     const fbApp = initializeApp(firebaseConfig);
     const auth = getAuth(fbApp);
@@ -363,12 +336,24 @@
     const provider = new GoogleAuthProvider();
 
     let user = null, events = [], currentDate = new Date(), selectedDateStr = null, unsubscribe = null;
-    let geminiKey = localStorage.getItem('v17_key') || "", geminiModel = localStorage.getItem('v17_model') || "gemini-1.5-flash";
+    let geminiKey = localStorage.getItem('v18_key') || "", geminiModel = localStorage.getItem('v18_model') || "gemini-1.5-flash";
 
-    // --- UI Helpers ---
+    // --- Helpers ---
     const getEl = (id) => document.getElementById(id);
     const toggleClass = (id, cls, condition) => getEl(id).classList.toggle(cls, condition);
+    const showModal = (id) => { 
+        const m = getEl(id); 
+        m.classList.remove('hidden'); 
+        setTimeout(() => { m.classList.remove('opacity-0', 'pointer-events-none'); m.children[0].classList.remove('scale-95'); }, 10);
+    };
+    const hideModal = (id) => { 
+        const m = getEl(id); 
+        m.classList.add('opacity-0', 'pointer-events-none'); 
+        m.children[0].classList.add('scale-95');
+        setTimeout(() => m.classList.add('hidden'), 300);
+    };
 
+    // --- Main Logic ---
     onAuthStateChanged(auth, (u) => {
         user = u; updateUI();
         if (user) syncData();
@@ -381,10 +366,10 @@
         toggleClass('calendarWrapper', 'hidden', !loggedIn);
         getEl('openAiModal').disabled = !loggedIn;
         
-        // Mobile/Desktop Nav Logic
         toggleClass('loginBtn', 'hidden', loggedIn);
         toggleClass('userProfile', 'hidden', !loggedIn);
         if (user) getEl('userPhoto').src = user.photoURL;
+        getEl('activeModelBadge').textContent = geminiModel;
     }
 
     function syncData() {
@@ -396,10 +381,9 @@
         });
     }
 
-    // --- AI Logic ---
     async function analyzeImage(base64) {
         if (!geminiKey) return showNotify("APIキーを設定してください", "error");
-        setLoading(true, "Analyzing...");
+        setLoading(true, "解析中...");
         const prompt = `画像からカレンダー予定を抽出しJSON形式で返してください: [{"title": "件名", "date": "YYYY-MM-DD", "time": "HH:mm", "description": ""}]。`;
         try {
             const path = geminiModel.startsWith('models/') ? geminiModel : `models/${geminiModel}`;
@@ -413,11 +397,10 @@
             const items = JSON.parse(data.candidates?.[0]?.content?.parts?.[0]?.text.replace(/```json|```/g, "").trim());
             for (const item of items) if (item.title && item.date) await addDoc(collection(db, 'artifacts', appId, 'users', user.uid, 'events'), { ...item, createdAt: serverTimestamp() });
             showNotify(`${items.length}件登録しました`, "success");
-            closeAiModalHandler();
+            hideModal('aiModal'); resetAiModal();
         } catch (err) { showNotify(`解析失敗: ${err.message}`, "error"); } finally { setLoading(false); }
     }
 
-    // --- Calendar UI ---
     function renderCalendar() {
         const grid = getEl('calendarGrid'); grid.innerHTML = '';
         const year = currentDate.getFullYear(); const month = currentDate.getMonth();
@@ -436,7 +419,6 @@
         const remaining = (7 - ((firstIdx + lastDate) % 7)) % 7;
         for (let i = 1; i <= remaining; i++) {
             const div = document.createElement('div');
-            // Empty transparent cell for layout
             grid.appendChild(div);
         }
     }
@@ -446,7 +428,7 @@
         const cell = document.createElement('div');
         const dateKey = isDimmed ? null : `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
         
-        cell.className = `day-cell ${isDimmed ? 'opacity-30 pointer-events-none' : ''} ${isToday ? 'today' : ''} ${selectedDateStr === dateKey ? 'selected' : ''}`;
+        cell.className = `day-card day-cell ${isDimmed ? 'opacity-30 pointer-events-none' : ''} ${isToday ? 'today' : ''} ${selectedDateStr === dateKey ? 'selected' : ''}`;
         
         const label = document.createElement('span');
         label.className = `day-num`;
@@ -460,16 +442,11 @@
                 selectedDateStr = dateKey; 
                 renderCalendar(); 
                 updateDayDetail(dateKey); 
-                // Open panel on mobile/desktop
                 const panel = getEl('dayDetailPanel');
-                if(window.innerWidth < 768) {
-                    panel.classList.remove('translate-y-full');
-                } else {
-                    panel.classList.remove('md:translate-x-full');
-                }
+                if(window.innerWidth < 768) { panel.classList.remove('translate-y-full'); } else { panel.classList.remove('md:translate-x-full'); }
             };
             events.filter(e => e.date === dateKey).slice(0, 4).forEach(ev => {
-                const chip = document.createElement('div'); chip.className = 'event-chip'; chip.textContent = ev.title; list.appendChild(chip);
+                const chip = document.createElement('div'); chip.className = 'event-pill'; chip.textContent = ev.title; list.appendChild(chip);
             });
         }
         cell.appendChild(list); grid.appendChild(cell);
@@ -484,10 +461,7 @@
         
         listEl.innerHTML = '';
         if(dayEvents.length === 0) {
-            listEl.innerHTML = `<div class="flex flex-col items-center justify-center h-48 text-slate-300">
-                <i class="fas fa-coffee text-4xl mb-4 opacity-50"></i>
-                <p class="text-sm font-bold">予定はありません</p>
-            </div>`;
+            listEl.innerHTML = `<div class="flex flex-col items-center justify-center h-48 text-slate-400/50"><i class="fas fa-mug-hot text-4xl mb-3"></i><p class="text-xs font-bold">No Events</p></div>`;
         }
 
         dayEvents.forEach(ev => {
@@ -495,14 +469,14 @@
             card.className = 'bg-white p-4 rounded-2xl shadow-sm border border-slate-100 hover:shadow-md transition group';
             card.innerHTML = `
                 <div class="flex items-start justify-between mb-2">
-                    <span class="text-xs font-bold text-indigo-600 bg-indigo-50 px-3 py-1 rounded-full">${ev.time || 'ALL DAY'}</span>
+                    <span class="text-[10px] font-bold text-indigo-600 bg-indigo-50 px-2 py-1 rounded-md">${ev.time || 'ALL DAY'}</span>
                     <div class="flex gap-2 opacity-0 group-hover:opacity-100 transition">
-                        <button class="w-8 h-8 rounded-full bg-slate-50 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 flex items-center justify-center edit-btn"><i class="fas fa-pen text-xs"></i></button>
-                        <button class="w-8 h-8 rounded-full bg-slate-50 text-slate-400 hover:text-red-500 hover:bg-red-50 flex items-center justify-center del-btn"><i class="fas fa-trash text-xs"></i></button>
+                        <button class="w-7 h-7 rounded-full bg-slate-50 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 flex items-center justify-center edit-btn"><i class="fas fa-pen text-[10px]"></i></button>
+                        <button class="w-7 h-7 rounded-full bg-slate-50 text-slate-400 hover:text-red-500 hover:bg-red-50 flex items-center justify-center del-btn"><i class="fas fa-trash text-[10px]"></i></button>
                     </div>
                 </div>
-                <h4 class="font-bold text-slate-800 text-lg mb-1">${ev.title}</h4>
-                ${ev.description ? `<p class="text-xs text-slate-500 leading-relaxed bg-slate-50 p-2 rounded-lg">${ev.description}</p>` : ''}
+                <h4 class="font-bold text-slate-800 text-base mb-1">${ev.title}</h4>
+                ${ev.description ? `<p class="text-xs text-slate-500 leading-relaxed">${ev.description}</p>` : ''}
             `;
             card.querySelector('.edit-btn').onclick = () => openEventForm(ev.id);
             card.querySelector('.del-btn').onclick = () => { if(confirm(`削除しますか？`)) deleteEvent(ev.id); };
@@ -511,7 +485,6 @@
     }
 
     // --- Modal Controls ---
-    const modalEl = getEl('eventFormModal');
     function openEventForm(id = null) {
         getEl('formEventId').value = id || "";
         if (id) {
@@ -524,14 +497,7 @@
             getEl('eventForm').reset();
             getEl('formDate').value = selectedDateStr || "";
         }
-        modalEl.classList.remove('hidden');
-        setTimeout(() => { modalEl.classList.remove('opacity-0', 'pointer-events-none'); modalEl.children[0].classList.remove('scale-95'); }, 10);
-    }
-    
-    function closeEventFormHandler() {
-        modalEl.classList.add('opacity-0', 'pointer-events-none');
-        modalEl.children[0].classList.add('scale-95');
-        setTimeout(() => modalEl.classList.add('hidden'), 300);
+        showModal('eventFormModal');
     }
 
     getEl('eventForm').onsubmit = async (e) => {
@@ -548,28 +514,25 @@
             setLoading(true, "Saving...");
             if (id) await setDoc(doc(db, 'artifacts', appId, 'users', user.uid, 'events', id), data, {merge:true});
             else { data.createdAt = serverTimestamp(); await addDoc(collection(db, 'artifacts', appId, 'users', user.uid, 'events'), data); }
-            closeEventFormHandler();
-            showNotify("保存しました!", "success");
+            hideModal('eventFormModal');
+            showNotify("保存しました", "success");
         } catch (err) { showNotify(err.message, "error"); } finally { setLoading(false); }
     };
 
-    // --- Listeners ---
-    getEl('loginBtn').onclick = () => signInWithPopup(auth, provider);
-    getEl('loginBtnLarge').onclick = () => signInWithPopup(auth, provider);
+    // Listeners
+    getEl('loginBtn').onclick = getEl('loginBtnLarge').onclick = () => signInWithPopup(auth, provider);
     getEl('logoutBtn').onclick = () => signOut(auth);
     getEl('prevBtn').onclick = () => { currentDate.setMonth(currentDate.getMonth()-1); renderCalendar(); };
     getEl('nextBtn').onclick = () => { currentDate.setMonth(currentDate.getMonth()+1); renderCalendar(); };
     getEl('closeDetail').onclick = () => {
         const panel = getEl('dayDetailPanel');
-        panel.classList.add('md:translate-x-full');
-        panel.classList.add('translate-y-full');
+        panel.classList.add('md:translate-x-full', 'translate-y-full');
     };
     getEl('manualAddBtn').onclick = () => openEventForm();
-    getEl('closeEventForm').onclick = closeEventFormHandler;
+    getEl('closeEventForm').onclick = () => hideModal('eventFormModal');
     
-    // Settings
-    getEl('openSettings').onclick = () => { getEl('apiKeyInput').value = geminiKey; getEl('settingsModal').classList.remove('hidden'); };
-    getEl('closeSettings').onclick = () => getEl('settingsModal').classList.add('hidden');
+    getEl('openSettings').onclick = () => { getEl('apiKeyInput').value = geminiKey; showModal('settingsModal'); };
+    getEl('closeSettings').onclick = () => hideModal('settingsModal');
     getEl('discoverBtn').onclick = async () => {
         setLoading(true);
         try {
@@ -588,14 +551,14 @@
     getEl('saveSettings').onclick = () => {
         geminiKey = getEl('apiKeyInput').value.trim();
         geminiModel = getEl('modelSelect').value;
-        localStorage.setItem('v17_key', geminiKey); localStorage.setItem('v17_model', geminiModel);
-        showNotify("Saved", "success"); getEl('settingsModal').classList.add('hidden');
+        localStorage.setItem('v18_key', geminiKey); localStorage.setItem('v18_model', geminiModel);
+        showNotify("Saved", "success"); hideModal('settingsModal');
     };
 
     // AI
-    const closeAiModalHandler = () => { getEl('aiModal').classList.add('hidden'); getEl('previewArea').classList.add('hidden'); getEl('dropZone').classList.remove('hidden'); };
-    getEl('openAiModal').onclick = () => getEl('aiModal').classList.remove('hidden');
-    getEl('closeAiModal').onclick = getEl('cancelUpload').onclick = closeAiModalHandler;
+    function resetAiModal() { getEl('previewArea').classList.add('hidden'); getEl('dropZone').classList.remove('hidden'); }
+    getEl('openAiModal').onclick = () => { resetAiModal(); showModal('aiModal'); };
+    getEl('closeAiModal').onclick = getEl('cancelUpload').onclick = () => hideModal('aiModal');
     getEl('dropZone').onclick = () => getEl('fileInput').click();
     getEl('fileInput').onchange = (e) => {
         const file = e.target.files[0];
@@ -612,10 +575,7 @@
     getEl('processAiBtn').onclick = () => { if(window._lastImg) analyzeImage(window._lastImg); };
 
     async function deleteEvent(id) { await deleteDoc(doc(db, 'artifacts', appId, 'users', user.uid, 'events', id)); showNotify("Deleted", "success"); }
-    function setLoading(is, msg) { 
-        if (msg) getEl('loadingMessage').textContent = msg; 
-        getEl('loadingOverlay').classList.toggle('hidden', !is); 
-    }
+    function setLoading(is, msg) { if (msg) getEl('loadingMessage').textContent = msg; getEl('loadingOverlay').classList.toggle('hidden', !is); }
     function showNotify(txt, type) {
         const n = getEl('notification');
         getEl('notifyText').textContent = txt;
