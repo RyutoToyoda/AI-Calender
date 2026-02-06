@@ -3,12 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Calendar - Enterprise Steady</title>
+    <title>AI Calendar - Hybrid OCR Sync</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Tesseract.js: ブラウザでOCR（文字認識）を行うためのライブラリ -->
+    <script src='https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js'></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;900&display=swap');
-        body { font-family: 'Inter', sans-serif; -webkit-font-smoothing: antialiased; }
+        body { font-family: 'Inter', sans-serif; }
         .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); border-top: 1px solid #e2e8f0; border-left: 1px solid #e2e8f0; }
         .day-cell { min-height: 120px; transition: all 0.2s; border-right: 1px solid #e2e8f0; border-bottom: 1px solid #e2e8f0; position: relative; padding: 10px; }
         .day-cell:hover { background-color: #f8fafc; }
@@ -29,10 +31,7 @@
             <div class="bg-indigo-600 p-2.5 rounded-2xl text-white shadow-lg">
                 <i class="fas fa-calendar-alt text-xl"></i>
             </div>
-            <div class="hidden sm:block">
-                <h1 class="text-xl font-black text-slate-800 tracking-tight">AI Calendar</h1>
-                <p class="text-[10px] text-indigo-500 font-bold uppercase tracking-widest">Enterprise Edition</p>
-            </div>
+            <h1 class="text-xl font-black text-slate-800 tracking-tight">Smart Calendar</h1>
         </div>
 
         <div class="flex items-center space-x-3">
@@ -47,7 +46,7 @@
             </button>
 
             <button id="openAiModal" class="flex items-center space-x-2 bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-xl font-bold shadow-lg shadow-indigo-100 transition-all transform hover:scale-105 active:scale-95 disabled:opacity-30" disabled>
-                <i class="fas fa-magic text-sm"></i>
+                <i class="fas fa-magic"></i>
                 <span class="hidden md:inline">AI読込</span>
             </button>
 
@@ -65,29 +64,24 @@
     </header>
 
     <main class="flex-grow p-4 md:p-8">
-        <!-- Not Logged In -->
         <div id="loginPrompt" class="flex flex-col items-center justify-center h-[70vh] text-center">
             <div class="bg-indigo-50 w-24 h-24 rounded-[2.5rem] flex items-center justify-center mb-8 shadow-inner">
                 <i class="fas fa-user-check text-4xl text-indigo-400"></i>
             </div>
-            <h2 class="text-3xl font-black text-slate-800 mb-4 tracking-tight">ようこそ AI Calendarへ</h2>
-            <p class="text-slate-500 max-w-sm mb-10 leading-relaxed">
-                Googleアカウントでログインして、スクリーンショットから予定を自動生成する体験を始めましょう。
-            </p>
+            <h2 class="text-3xl font-black text-slate-800 mb-4 tracking-tight">ログインが必要です</h2>
             <button id="loginBtnLarge" class="bg-slate-900 text-white px-10 py-5 rounded-[1.5rem] font-bold shadow-2xl hover:bg-slate-800 transition transform hover:-translate-y-1 flex items-center space-x-4">
                 <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" class="w-6 h-6" alt="G">
                 <span>Googleアカウントでログイン</span>
             </button>
         </div>
 
-        <!-- Calendar UI -->
         <div id="calendarWrapper" class="hidden max-w-7xl mx-auto bg-white rounded-[2.5rem] shadow-2xl border border-slate-100 overflow-hidden">
             <div class="calendar-grid bg-slate-50 text-slate-400 text-[10px] font-black uppercase tracking-widest border-b border-slate-200">
                 <div class="py-5 text-center border-r border-slate-200 text-red-400">Sun</div>
                 <div class="py-5 text-center border-r border-slate-200">Mon</div>
-                <div class="py-5 text-center border-r border-slate-200 text-slate-500">Tue</div>
-                <div class="py-5 text-center border-r border-slate-200 text-slate-500">Wed</div>
-                <div class="py-5 text-center border-r border-slate-200 text-slate-500">Thu</div>
+                <div class="py-5 text-center border-r border-slate-200">Tue</div>
+                <div class="py-5 text-center border-r border-slate-200">Wed</div>
+                <div class="py-5 text-center border-r border-slate-200">Thu</div>
                 <div class="py-5 text-center border-r border-slate-200 text-blue-400">Fri</div>
                 <div class="py-5 text-center text-slate-500">Sat</div>
             </div>
@@ -100,46 +94,28 @@
         <div class="bg-white rounded-[2.5rem] w-full max-w-md p-10 shadow-2xl border border-white/20">
             <h3 class="text-2xl font-black text-slate-800 mb-6 flex items-center space-x-3">
                 <i class="fas fa-cog text-indigo-500"></i>
-                <span>API・環境設定</span>
+                <span>API設定 (ハイブリッド)</span>
             </h3>
-            
             <div class="space-y-6">
-                <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100 space-y-2">
-                    <div class="flex items-center justify-between text-[11px] font-black">
-                        <span class="text-slate-400 uppercase">Auth Status:</span>
-                        <span id="statusAuth" class="text-red-500">DISCONNECTED</span>
-                    </div>
-                </div>
-
                 <div class="space-y-2">
                     <label class="text-[10px] font-black text-slate-400 uppercase tracking-tighter ml-1">Gemini API Key</label>
                     <input type="password" id="apiKeyInput" class="w-full px-5 py-4 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:border-indigo-500 focus:bg-white outline-none transition-all font-mono text-xs" placeholder="AIzaSy...">
                 </div>
-
-                <div class="space-y-2">
-                    <label class="text-[10px] font-black text-slate-400 uppercase tracking-tighter ml-1">AI Model Selection</label>
-                    <select id="modelSelect" class="w-full px-5 py-4 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:border-indigo-500 focus:bg-white outline-none transition-all font-bold text-sm">
-                        <option value="gemini-1.5-flash">Gemini 1.5 Flash (Most Compatible)</option>
-                        <option value="gemini-2.0-flash-exp">Gemini 2.0 Flash (Next-Gen)</option>
-                        <option value="gemini-1.5-pro">Gemini 1.5 Pro (High Accuracy)</option>
-                    </select>
-                </div>
-
                 <div class="flex space-x-4 pt-4">
                     <button id="closeSettings" class="flex-1 py-4 text-slate-500 font-bold hover:bg-slate-50 rounded-2xl transition">閉じる</button>
-                    <button id="saveSettings" class="flex-1 py-4 bg-indigo-600 text-white font-bold rounded-2xl shadow-xl hover:bg-indigo-700 transition transform active:scale-95">設定を保存</button>
+                    <button id="saveSettings" class="flex-1 py-4 bg-indigo-600 text-white font-bold rounded-2xl shadow-xl hover:bg-indigo-700 transition">設定を保存</button>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- AI Modal -->
+    <!-- AI Scan Modal -->
     <div id="aiModal" class="fixed inset-0 bg-slate-900/80 backdrop-blur-md flex items-center justify-center z-40 hidden p-4">
         <div class="bg-white rounded-[3rem] w-full max-w-lg p-10 shadow-2xl">
             <div class="flex justify-between items-center mb-8">
                 <h3 class="text-2xl font-black text-slate-800 flex items-center space-x-4">
                     <i class="fas fa-magic text-indigo-600"></i>
-                    <span>画像から予定を生成</span>
+                    <span>画像から予定を抽出</span>
                 </h3>
                 <button id="closeAiModal" class="w-10 h-10 rounded-full flex items-center justify-center hover:bg-slate-100 text-slate-400 transition"><i class="fas fa-times"></i></button>
             </div>
@@ -148,16 +124,20 @@
                 <input type="file" id="fileInput" class="hidden" accept="image/*">
                 <i class="fas fa-image text-4xl text-indigo-500 mb-6 group-hover:scale-110 transition-transform"></i>
                 <p class="text-lg font-black text-slate-800">スクショをアップロード</p>
-                <p class="text-sm text-slate-400 mt-2">AIがカレンダー情報を抽出します</p>
+                <p class="text-sm text-slate-400 mt-2">OCRで文字を読み取り、AIが解析します</p>
             </div>
 
-            <div id="previewArea" class="mt-6 hidden">
-                <img id="imagePreview" src="" class="rounded-[2rem] w-full h-56 object-cover border-4 border-white shadow-xl">
+            <div id="previewArea" class="mt-6 hidden text-center">
+                <img id="imagePreview" src="" class="rounded-[2rem] w-full max-h-48 object-contain border-4 border-white shadow-xl mb-4">
+                <div class="bg-slate-50 p-4 rounded-xl border text-left">
+                    <p class="text-[10px] font-black text-slate-400 uppercase mb-1">OCR Status:</p>
+                    <div id="ocrStatus" class="text-xs font-bold text-slate-600 italic">待機中...</div>
+                </div>
             </div>
 
             <div class="mt-10 flex space-x-4">
                 <button id="cancelUpload" class="flex-1 py-4 border-2 border-slate-100 rounded-2xl font-bold text-slate-500 hover:bg-slate-50 transition">キャンセル</button>
-                <button id="processAiBtn" class="flex-1 py-4 bg-indigo-600 text-white rounded-2xl font-bold shadow-xl shadow-indigo-100 hover:bg-indigo-700 disabled:opacity-30 transition-all" disabled>AI解析を開始</button>
+                <button id="processAiBtn" class="flex-1 py-4 bg-indigo-600 text-white rounded-2xl font-bold shadow-xl shadow-indigo-100 hover:bg-indigo-700 disabled:opacity-30 transition-all" disabled>解析を開始</button>
             </div>
         </div>
     </div>
@@ -167,7 +147,7 @@
         <div class="bg-white px-14 py-12 rounded-[3rem] shadow-2xl flex flex-col items-center">
             <div class="relative mb-8">
                 <i class="fas fa-circle-notch spinner text-6xl text-indigo-600"></i>
-                <i class="fas fa-microchip absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-indigo-400 text-xl"></i>
+                <i class="fas fa-brain absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-indigo-400 text-xl"></i>
             </div>
             <p id="loadingMessage" class="text-xl font-black text-slate-800 tracking-tight">AIが処理しています...</p>
         </div>
@@ -192,7 +172,7 @@
         messagingSenderId: "591169343842",
         appId: "1:591169343842:web:4345e3fdff52d4b5cadc3b"
     };
-    const appId = "calendar-enterprise-v5";
+    const appId = "hybrid-cal-v6";
 
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
@@ -203,8 +183,7 @@
     let events = [];
     let currentDate = new Date();
     let unsubscribe = null;
-    let geminiKey = localStorage.getItem('ent_g_key') || "";
-    let geminiModel = localStorage.getItem('ent_g_model') || "gemini-1.5-flash";
+    let geminiKey = localStorage.getItem('hybrid_g_key') || "";
 
     onAuthStateChanged(auth, (u) => {
         user = u;
@@ -215,8 +194,6 @@
             document.getElementById('userPhoto').src = user.photoURL;
             document.getElementById('loginBtn').classList.add('hidden');
             document.getElementById('userProfile').classList.remove('hidden');
-            document.getElementById('statusAuth').textContent = "CONNECTED";
-            document.getElementById('statusAuth').className = "text-emerald-500";
             syncData();
         } else {
             if (unsubscribe) unsubscribe();
@@ -225,8 +202,6 @@
             document.getElementById('openAiModal').disabled = true;
             document.getElementById('loginBtn').classList.remove('hidden');
             document.getElementById('userProfile').classList.add('hidden');
-            document.getElementById('statusAuth').textContent = "DISCONNECTED";
-            document.getElementById('statusAuth').className = "text-red-500";
         }
     });
 
@@ -239,67 +214,62 @@
         }, (err) => showNotify(`Firebase Error: ${err.message}`, "error"));
     }
 
-    async function handleAnalyze(base64) {
+    // --- 新しい解析フロー: OCR (Tesseract) -> Gemini (Text Only) ---
+    async function handleAnalyzeWithOCR(imageElement) {
         if (!geminiKey) {
             showNotify("APIキーが未設定です。設定アイコンから入力してください。", "error");
             return;
         }
-        setLoading(true, "AIが予定を抽出中...");
+
+        setLoading(true, "画像から文字を読み取っています (OCR)...");
+        document.getElementById('ocrStatus').textContent = "文字を読み取り中...";
         
-        // 解析指示
-        const prompt = `画像からカレンダーの予定を抽出し、以下の形式のJSON配列のみを返してください。説明は不要です。
-        [{"title": "予定名", "date": "YYYY-MM-DD", "time": "HH:mm", "description": "詳細"}]
-        日付不明な場合は${new Date().getFullYear()}年としてください。`;
-
         try {
-            // エラー回避のため v1 エンドポイントを使用
-            const url = `https://generativelanguage.googleapis.com/v1/models/${geminiModel}:generateContent?key=${geminiKey}`;
-
-            const response = await fetch(url, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    contents: [{ parts: [{ text: prompt }, { inlineData: { mimeType: "image/png", data: base64.split(',')[1] } }] }]
-                })
-            });
-
-            const data = await response.json();
-            
-            if (data.error) {
-                // v1がダメな場合は v1beta を試すフォールバック
-                if (data.error.status === "NOT_FOUND") {
-                    return await handleAnalyzeFallback(base64, prompt);
+            // ステップ1: ブラウザ側でOCR実行
+            const result = await Tesseract.recognize(imageElement.src, 'jpn+eng', {
+                logger: m => {
+                    if(m.status === 'recognizing text') {
+                        document.getElementById('ocrStatus').textContent = `解析中: ${Math.round(m.progress * 100)}%`;
+                    }
                 }
-                throw new Error(data.error.message);
+            });
+            const extractedText = result.data.text;
+            
+            if (!extractedText.trim()) {
+                throw new Error("画像から文字を読み取れませんでした。");
             }
 
-            const rawResponse = data.candidates?.[0]?.content?.parts?.[0]?.text;
-            processExtractedData(rawResponse);
-        } catch (err) {
-            console.error(err);
-            showNotify(`解析失敗: ${err.message}`, "error");
-        } finally {
-            setLoading(false);
-        }
-    }
+            // ステップ2: Geminiに読み取ったテキストを送ってJSON化する (Visionを使わないので安定)
+            setLoading(true, "AIが予定を整形しています...");
+            
+            const prompt = `以下のテキストはカレンダーのスクリーンショットからOCRで読み取ったものです。内容を解析し、予定（件名、日付、時間、詳細）を抽出して、必ず以下の形式のJSON配列のみを返してください。
+            [{"title": "予定名", "date": "YYYY-MM-DD", "time": "HH:mm", "description": "詳細"}]
+            日付が特定できない場合は、現在の年(${new Date().getFullYear()}年)として推測してください。JSON以外のテキストは絶対に含めないでください。
 
-    async function handleAnalyzeFallback(base64, prompt) {
-        console.log("Retrying with v1beta endpoint...");
-        const url = `https://generativelanguage.googleapis.com/v1beta/models/${geminiModel}:generateContent?key=${geminiKey}`;
-        try {
-            const response = await fetch(url, {
+            【OCRテキスト】:
+            ${extractedText}`;
+
+            // テキストのみの生成なので v1/models/gemini-1.5-flash は非常に安定します
+            const response = await fetch(`https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${geminiKey}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    contents: [{ parts: [{ text: prompt }, { inlineData: { mimeType: "image/png", data: base64.split(',')[1] } }] }]
+                    contents: [{ parts: [{ text: prompt }] }]
                 })
             });
+
             const data = await response.json();
             if (data.error) throw new Error(data.error.message);
+
             const rawResponse = data.candidates?.[0]?.content?.parts?.[0]?.text;
             processExtractedData(rawResponse);
+
         } catch (err) {
-            showNotify(`解析失敗(Fallback): ${err.message}`, "error");
+            console.error(err);
+            showNotify(`エラー: ${err.message}`, "error");
+        } finally {
+            setLoading(false);
+            document.getElementById('ocrStatus').textContent = "完了";
         }
     }
 
@@ -319,7 +289,7 @@
             showNotify(`${count}件の予定を登録しました`, "success");
             closeAiModalHandler();
         } catch (e) {
-            showNotify("解析データの形式が正しくありませんでした", "error");
+            showNotify("AIがデータを正しく整形できませんでした", "error");
         }
     }
 
@@ -330,11 +300,9 @@
         const year = currentDate.getFullYear();
         const month = currentDate.getMonth();
         document.getElementById('currentMonthYear').textContent = `${year}年 ${month + 1}月`;
-        
         const firstDay = new Date(year, month, 1).getDay();
         const daysInMonth = new Date(year, month + 1, 0).getDate();
         const daysInPrevMonth = new Date(year, month, 0).getDate();
-
         for (let i = firstDay; i > 0; i--) createDayCell(daysInPrevMonth - i + 1, true, false);
         const today = new Date();
         for (let i = 1; i <= daysInMonth; i++) {
@@ -351,7 +319,6 @@
         label.className = `text-xs font-black mb-2 w-8 h-8 flex items-center justify-center rounded-full ${isToday ? 'bg-indigo-600 text-white shadow-xl' : ''}`;
         label.textContent = day;
         cell.appendChild(label);
-
         if (!isDimmed) {
             const dateStr = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
             events.filter(e => e.date === dateStr).forEach(ev => {
@@ -378,17 +345,14 @@
     document.getElementById('nextBtn').onclick = () => { currentDate.setMonth(currentDate.getMonth() + 1); renderCalendar(); };
     document.getElementById('openSettings').onclick = () => {
         document.getElementById('apiKeyInput').value = geminiKey;
-        document.getElementById('modelSelect').value = geminiModel;
         document.getElementById('settingsModal').classList.remove('hidden');
     };
     document.getElementById('closeSettings').onclick = () => document.getElementById('settingsModal').classList.add('hidden');
     document.getElementById('saveSettings').onclick = () => {
         const key = document.getElementById('apiKeyInput').value.trim();
-        const model = document.getElementById('modelSelect').value;
         if (key) {
-            geminiKey = key; geminiModel = model;
-            localStorage.setItem('ent_g_key', key);
-            localStorage.setItem('ent_g_model', model);
+            geminiKey = key;
+            localStorage.setItem('hybrid_g_key', key);
             showNotify("設定を保存しました", "success");
             document.getElementById('settingsModal').classList.add('hidden');
         }
@@ -407,16 +371,20 @@
         if (file) {
             const reader = new FileReader();
             reader.onload = (ev) => {
-                document.getElementById('imagePreview').src = ev.target.result;
+                const img = document.getElementById('imagePreview');
+                img.src = ev.target.result;
                 document.getElementById('previewArea').classList.remove('hidden');
                 document.getElementById('dropZone').classList.add('hidden');
                 document.getElementById('processAiBtn').disabled = false;
-                window._lastImg = ev.target.result;
+                document.getElementById('ocrStatus').textContent = "準備完了";
             };
             reader.readAsDataURL(file);
         }
     };
-    document.getElementById('processAiBtn').onclick = () => { if (window._lastImg) handleAnalyze(window._lastImg); };
+    document.getElementById('processAiBtn').onclick = () => {
+        const img = document.getElementById('imagePreview');
+        handleAnalyzeWithOCR(img);
+    };
     function setLoading(is, msg) {
         document.getElementById('loadingMessage').textContent = msg;
         document.getElementById('loadingOverlay').classList.toggle('hidden', !is);
