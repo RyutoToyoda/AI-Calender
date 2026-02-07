@@ -3,17 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>AI Calendar - v27.0 Per-Event Notify</title>
     
-    <!-- 【強力なキャッシュ無効化設定】 -->
-    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-    <meta http-equiv="Pragma" content="no-cache">
-    <meta http-equiv="Expires" content="0">
-
-    <title>AI Calendar - v26.0 NoCache</title>
-    
-    <!-- ライブラリ読み込みにもバージョン付与 -->
-    <script src="https://cdn.tailwindcss.com?v=26"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css?v=26">
+    <!-- キャッシュ対策: ?v=27 -->
+    <script src="https://cdn.tailwindcss.com?v=27"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css?v=27">
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
     
     <style>
@@ -121,7 +115,7 @@
 <body class="h-screen w-screen flex flex-col md:flex-row overflow-hidden text-slate-800">
 
     <!-- Version Badge -->
-    <div class="fixed top-0 left-0 bg-indigo-600 text-white text-[10px] px-3 py-1 z-[100] font-bold rounded-br-xl shadow-lg">v26.0</div>
+    <div class="fixed top-0 left-0 bg-indigo-600 text-white text-[10px] px-3 py-1 z-[100] font-bold rounded-br-xl shadow-lg">v27.0</div>
 
     <!-- Sidebar -->
     <nav class="glass z-50 flex md:flex-col justify-between items-center p-2 md:py-6 md:px-3 fixed md:relative bottom-0 w-full md:w-24 md:h-full border-t md:border-t-0 md:border-r border-white/40 shadow-xl order-2 md:order-1 h-16">
@@ -177,7 +171,7 @@
                     <div class="bg-gradient-to-br from-indigo-500 to-purple-600 w-16 h-16 rounded-2xl flex items-center justify-center mb-6 shadow-lg text-white">
                         <i class="fas fa-lock text-2xl"></i>
                     </div>
-                    <h2 class="text-2xl font-bold mb-2">Welcome v26</h2>
+                    <h2 class="text-2xl font-bold mb-2">Welcome v27</h2>
                     <p class="text-sm text-slate-600 mb-6">ログインして全ての機能を利用しましょう。</p>
                     <button id="loginBtnLarge" class="bg-slate-900 text-white px-8 py-3 rounded-xl font-bold shadow-xl hover:scale-105 transition transform w-full">Googleでログイン</button>
                     <div id="authErrorMessage" class="hidden mt-4 p-3 bg-red-100/80 text-red-600 text-xs text-left rounded-xl border border-red-200"></div>
@@ -273,6 +267,17 @@
                     <label class="text-xs font-bold text-slate-400 uppercase ml-2">メモ</label>
                     <textarea id="formDescription" rows="3" class="w-full px-5 py-3 bg-white/50 border border-slate-200 rounded-xl outline-none focus:border-indigo-500 resize-none"></textarea>
                 </div>
+                <!-- 通知個別設定スイッチ -->
+                <div class="flex items-center justify-between px-2 pt-2">
+                    <label class="text-xs font-bold text-slate-500 uppercase flex items-center gap-2">
+                        <i class="fas fa-bell"></i> この予定を通知する
+                    </label>
+                    <div class="relative inline-block w-10 mr-2 align-middle select-none">
+                        <input type="checkbox" id="formNotify" class="toggle-checkbox absolute block w-5 h-5 rounded-full bg-white border-4 appearance-none cursor-pointer" checked/>
+                        <label for="formNotify" class="toggle-label block overflow-hidden h-5 rounded-full bg-gray-300 cursor-pointer"></label>
+                    </div>
+                </div>
+
                 <div class="flex gap-3 pt-4">
                     <button type="button" id="closeEventForm" class="flex-1 py-3 text-slate-500 font-bold hover:bg-slate-100 rounded-xl transition">キャンセル</button>
                     <button type="submit" class="flex-1 py-3 bg-indigo-600 text-white font-bold rounded-xl shadow-lg hover:bg-indigo-700 transition">保存</button>
@@ -301,7 +306,7 @@
                     </div>
                 </div>
                 <div class="flex items-center justify-between px-2">
-                    <label class="text-sm font-bold text-slate-700">通知機能</label>
+                    <label class="text-sm font-bold text-slate-700">全体通知機能</label>
                     <div class="relative inline-block w-12 mr-2 align-middle select-none">
                         <input type="checkbox" id="notificationToggle" class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer"/>
                         <label for="notificationToggle" class="toggle-label block overflow-hidden h-6 rounded-full bg-gray-300 cursor-pointer"></label>
@@ -334,6 +339,7 @@
     import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
     import { getFirestore, collection, doc, onSnapshot, addDoc, setDoc, deleteDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
+    // --- Config ---
     const firebaseConfig = {
         apiKey: "AIzaSyA9MeRV2VefKb5cOJLzegq3U6EsBEB2axg",
         authDomain: "my-ai-calender-68d05.firebaseapp.com",
@@ -342,7 +348,7 @@
         messagingSenderId: "591169343842",
         appId: "1:591169343842:web:4345e3fdff52d4b5cadc3b"
     };
-    const appId = "calendar-ultra-v26";
+    const appId = "calendar-ultra-v27";
 
     const fbApp = initializeApp(firebaseConfig);
     const auth = getAuth(fbApp);
@@ -350,8 +356,8 @@
     const provider = new GoogleAuthProvider();
 
     let user = null, events = [], currentDate = new Date(), selectedDateStr = null, unsubscribe = null;
-    let geminiKey = localStorage.getItem('v26_key') || "", geminiModel = localStorage.getItem('v26_model') || "gemini-1.5-flash";
-    let notificationsEnabled = localStorage.getItem('v26_notify') === 'true';
+    let geminiKey = localStorage.getItem('v27_key') || "", geminiModel = localStorage.getItem('v27_model') || "gemini-1.5-flash";
+    let notificationsEnabled = localStorage.getItem('v27_notify') === 'true';
 
     const getEl = (id) => document.getElementById(id);
     const toggleClass = (id, cls, condition) => getEl(id).classList.toggle(cls, condition);
@@ -379,7 +385,7 @@
         return null;
     }
 
-    // --- Notification ---
+    // --- Notification Logic (Per Event) ---
     function checkNotifications() {
         if (!notificationsEnabled || !user) return;
         const now = new Date();
@@ -387,9 +393,9 @@
         const currentMin = now.getMinutes();
         const todayStr = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
 
-        // 朝6:30の通知
+        // 朝6:30の通知 (通知ONの予定のみカウント)
         if (currentHour === 6 && currentMin === 30) {
-            const todayEvents = events.filter(e => e.date === todayStr);
+            const todayEvents = events.filter(e => e.date === todayStr && e.notify !== false);
             if (todayEvents.length > 0 && !hasNotified(`morning_${todayStr}`)) {
                 sendNotification(`今日の予定: ${todayEvents.length}件`, todayEvents.map(e => `・${e.time||''} ${e.title}`).join('\n'));
                 markNotified(`morning_${todayStr}`);
@@ -397,6 +403,9 @@
         }
 
         events.forEach(ev => {
+            // 個別の通知設定チェック (undefinedはtrue扱い)
+            if (ev.notify === false) return;
+
             if (ev.date === todayStr && ev.time) {
                 const [h, m] = ev.time.split(':').map(Number);
                 const eventTime = new Date(now.getFullYear(), now.getMonth(), now.getDate(), h, m);
@@ -428,12 +437,12 @@
         Notification.requestPermission().then(p => {
             if(p === 'granted') {
                 notificationsEnabled = true;
-                localStorage.setItem('v26_notify', 'true');
+                localStorage.setItem('v27_notify', 'true');
                 getEl('notificationToggle').checked = true;
                 showNotify("通知をONにしました", "success");
             } else {
                 notificationsEnabled = false;
-                localStorage.setItem('v26_notify', 'false');
+                localStorage.setItem('v27_notify', 'false');
                 getEl('notificationToggle').checked = false;
                 alert("通知がブロックされました");
             }
@@ -477,7 +486,7 @@
 
     // --- AI & Model Discovery ---
     getEl('discoverBtn').onclick = async () => {
-        if (!geminiKey) geminiKey = localStorage.getItem('v26_key') || "";
+        if (!geminiKey) geminiKey = localStorage.getItem('v27_key') || "";
         if (!geminiKey) return showNotify("APIキーを入力してください", "error");
         setLoading(true, "Searching Models...");
         try {
@@ -506,9 +515,9 @@
     };
 
     async function analyzeImage(base64) {
-        if (!geminiKey) geminiKey = localStorage.getItem('v26_key') || "";
-        
+        if (!geminiKey) geminiKey = localStorage.getItem('v27_key') || "";
         if (!geminiKey) return showNotify("APIキーを設定してください", "error");
+        
         setLoading(true, "Analyzing...");
         const prompt = `画像からカレンダー予定を抽出しJSON形式で返してください: [{"title": "件名", "date": "YYYY-MM-DD", "time": "HH:mm", "description": ""}]。`;
         try {
@@ -521,7 +530,17 @@
             const data = await res.json();
             if (data.error) throw new Error(data.error.message);
             const items = JSON.parse(data.candidates?.[0]?.content?.parts?.[0]?.text.replace(/```json|```/g, "").trim());
-            for (const item of items) if (item.title && item.date) await addDoc(collection(db, 'artifacts', appId, 'users', user.uid, 'events'), { ...item, createdAt: serverTimestamp() });
+            
+            // Add with notify: true by default
+            for (const item of items) {
+                if (item.title && item.date) {
+                    await addDoc(collection(db, 'artifacts', appId, 'users', user.uid, 'events'), { 
+                        ...item, 
+                        notify: true, 
+                        createdAt: serverTimestamp() 
+                    });
+                }
+            }
             showNotify(`${items.length}件登録しました`, "success");
             hideModal('aiModal'); getEl('previewArea').classList.add('hidden'); getEl('dropZone').classList.remove('hidden');
         } catch (err) { showNotify(`解析失敗: ${err.message}`, "error"); } finally { setLoading(false); }
@@ -573,7 +592,16 @@
                 if(window.innerWidth < 768) { panel.classList.remove('translate-y-full'); } else { panel.classList.remove('md:translate-x-full'); }
             };
             events.filter(e => e.date === dateKey).slice(0, 4).forEach(ev => {
-                const chip = document.createElement('div'); chip.className = 'event-pill'; chip.textContent = ev.title; list.appendChild(chip);
+                const chip = document.createElement('div'); 
+                chip.className = 'event-pill'; 
+                chip.textContent = ev.title; 
+                // 通知OFFならスタイル変更（オプション）
+                if (ev.notify === false) {
+                    chip.style.borderLeftColor = "#94a3b8"; 
+                    chip.style.backgroundColor = "#f1f5f9";
+                    chip.style.color = "#64748b";
+                }
+                list.appendChild(chip);
             });
         }
         cell.appendChild(list); grid.appendChild(cell);
@@ -596,9 +624,18 @@
         dayEvents.forEach(ev => {
             const card = document.createElement('div');
             card.className = 'bg-white p-4 rounded-2xl shadow-sm border border-slate-100 hover:shadow-md transition group';
+            
+            // 通知アイコンの状態
+            const notifyIcon = ev.notify !== false 
+                ? '<i class="fas fa-bell text-indigo-500"></i>' 
+                : '<i class="fas fa-bell-slash text-slate-300"></i>';
+
             card.innerHTML = `
                 <div class="flex items-start justify-between mb-2">
-                    <span class="text-[10px] font-bold text-indigo-600 bg-indigo-50 px-2 py-1 rounded-md">${ev.time || 'ALL DAY'}</span>
+                    <div class="flex items-center gap-2">
+                        <span class="text-[10px] font-bold text-indigo-600 bg-indigo-50 px-2 py-1 rounded-md">${ev.time || 'ALL DAY'}</span>
+                        <span class="text-xs">${notifyIcon}</span>
+                    </div>
                     <div class="flex gap-2 opacity-0 group-hover:opacity-100 transition">
                         <button class="w-7 h-7 rounded-full bg-slate-50 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 flex items-center justify-center edit-btn"><i class="fas fa-pen text-[10px]"></i></button>
                         <button class="w-7 h-7 rounded-full bg-slate-50 text-slate-400 hover:text-red-500 hover:bg-red-50 flex items-center justify-center del-btn"><i class="fas fa-trash text-[10px]"></i></button>
@@ -613,18 +650,21 @@
         });
     }
 
-    // --- Modal Controls & Listeners ---
+    // --- Modal Controls ---
     function openEventForm(id = null) {
         getEl('formEventId').value = id || "";
+        
         if (id) {
             const ev = events.find(e => e.id === id);
             getEl('formTitle').value = ev.title;
             getEl('formDate').value = ev.date;
             getEl('formTime').value = ev.time || "";
             getEl('formDescription').value = ev.description || "";
+            getEl('formNotify').checked = ev.notify !== false; // Default true
         } else {
             getEl('eventForm').reset();
             getEl('formDate').value = selectedDateStr || "";
+            getEl('formNotify').checked = true; // 新規は通知ON
         }
         showModal('eventFormModal');
     }
@@ -637,6 +677,7 @@
             date: getEl('formDate').value,
             time: getEl('formTime').value,
             description: getEl('formDescription').value,
+            notify: getEl('formNotify').checked, // 通知設定保存
             updatedAt: serverTimestamp()
         };
         try {
@@ -673,16 +714,15 @@
     getEl('closeSettings').onclick = () => hideModal('settingsModal');
     getEl('notificationToggle').onchange = (e) => {
         if (e.target.checked) requestNotifyPermission();
-        else { notificationsEnabled = false; localStorage.setItem('v26_notify', 'false'); }
+        else { notificationsEnabled = false; localStorage.setItem('v27_notify', 'false'); }
     };
     
     getEl('saveSettings').onclick = () => {
         geminiKey = getEl('apiKeyInput').value.trim();
         geminiModel = getEl('modelSelect').value;
-        localStorage.setItem('v26_key', geminiKey); 
-        localStorage.setItem('v26_model', geminiModel);
+        localStorage.setItem('v27_key', geminiKey); 
+        localStorage.setItem('v27_model', geminiModel);
         
-        // 即時反映
         getEl('activeModelBadge').textContent = geminiModel;
         showNotify("Saved", "success"); 
         hideModal('settingsModal');
