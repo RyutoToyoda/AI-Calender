@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <!-- viewport-fit=cover でノッチまで広げる -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>AI Calendar - App Mode</title>
+    <title>AI Calendar - Long Term Support</title>
 
     <!-- 【重要】アプリ化（PWA）のための設定 -->
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -13,8 +13,8 @@
     <meta name="theme-color" content="#e0c3fc">
     
     <!-- キャッシュ対策 -->
-    <script src="https://cdn.tailwindcss.com?v=27_1"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css?v=27_1">
+    <script src="https://cdn.tailwindcss.com?v=28"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css?v=28">
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
     
     <style>
@@ -25,7 +25,6 @@
             background: linear-gradient(135deg, #e0c3fc 0%, #8ec5fc 100%);
             color: #1e293b;
             -webkit-tap-highlight-color: transparent;
-            /* iOSのアドレスバー対策：動的な高さに対応 */
             height: 100dvh;
             width: 100vw;
         }
@@ -41,13 +40,12 @@
         .calendar-grid { 
             display: grid; 
             grid-template-columns: repeat(7, 1fr); 
-            gap: 8px; /* 少し狭めて収まりよく */
+            gap: 8px;
             padding: 8px;
         }
 
         .day-card { 
             min-height: 80px;
-            /* 高さを自動計算して画面内に収める */
             height: calc((100dvh - 160px) / 5.5); 
             display: flex;
             flex-direction: column; 
@@ -63,7 +61,6 @@
 
         @media (max-width: 768px) {
             .calendar-grid { gap: 4px; padding: 4px; }
-            /* スマホ向け高さ調整 */
             .day-card { 
                 border-radius: 8px; 
                 height: calc((100dvh - 220px) / 6); 
@@ -125,7 +122,6 @@
         .spinner { animation: spin 1s linear infinite; }
         @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
         
-        /* iPhoneのノッチとホームバー領域を考慮 */
         .safe-pt { padding-top: env(safe-area-inset-top); }
         .safe-pb { padding-bottom: env(safe-area-inset-bottom); }
     </style>
@@ -133,7 +129,7 @@
 <body class="h-screen w-screen flex flex-col md:flex-row overflow-hidden text-slate-800">
 
     <!-- Version Badge -->
-    <div class="fixed top-0 left-0 bg-indigo-600 text-white text-[10px] px-2 py-1 z-[100] font-bold rounded-br-xl shadow-lg mt-safe safe-pt">v27.1 App</div>
+    <div class="fixed top-0 left-0 bg-indigo-600 text-white text-[10px] px-2 py-1 z-[100] font-bold rounded-br-xl shadow-lg mt-safe safe-pt">v28.0 LTS</div>
 
     <!-- Sidebar / Bottom Nav -->
     <nav class="glass z-50 flex md:flex-col justify-between items-center p-2 md:py-6 md:px-3 fixed md:relative bottom-0 w-full md:w-24 md:h-full border-t md:border-t-0 md:border-r border-white/40 shadow-xl order-2 md:order-1 h-20 safe-pb">
@@ -329,6 +325,15 @@
                         <label for="notificationToggle" class="toggle-label block overflow-hidden h-5 rounded-full bg-gray-300 cursor-pointer"></label>
                     </div>
                 </div>
+                
+                <!-- バックアップ機能 -->
+                <div class="pt-2 border-t border-slate-100">
+                    <label class="text-[10px] font-bold text-slate-400 uppercase ml-2 mb-2 block">データ管理</label>
+                    <button id="exportDataBtn" class="w-full py-2.5 bg-slate-100 text-indigo-600 font-bold rounded-xl hover:bg-slate-200 transition text-xs flex items-center justify-center gap-2">
+                        <i class="fas fa-download"></i> データをバックアップ
+                    </button>
+                </div>
+
                 <div class="flex gap-3 pt-2">
                     <button id="closeSettings" class="flex-1 py-2.5 text-slate-500 font-bold hover:bg-slate-100 rounded-xl transition text-xs">閉じる</button>
                     <button id="saveSettings" class="flex-1 py-2.5 bg-indigo-600 text-white font-bold rounded-xl shadow-lg hover:bg-indigo-700 transition text-xs">保存</button>
@@ -364,7 +369,7 @@
         messagingSenderId: "591169343842",
         appId: "1:591169343842:web:4345e3fdff52d4b5cadc3b"
     };
-    const appId = "calendar-app-v27-1";
+    const appId = "calendar-app-v28-0";
 
     const fbApp = initializeApp(firebaseConfig);
     const auth = getAuth(fbApp);
@@ -372,8 +377,8 @@
     const provider = new GoogleAuthProvider();
 
     let user = null, events = [], currentDate = new Date(), selectedDateStr = null, unsubscribe = null;
-    let geminiKey = localStorage.getItem('v27_key') || "", geminiModel = localStorage.getItem('v27_model') || "gemini-1.5-flash";
-    let notificationsEnabled = localStorage.getItem('v27_notify') === 'true';
+    let geminiKey = localStorage.getItem('v28_key') || "", geminiModel = localStorage.getItem('v28_model') || "gemini-1.5-flash";
+    let notificationsEnabled = localStorage.getItem('v28_notify') === 'true';
 
     const getEl = (id) => document.getElementById(id);
     const toggleClass = (id, cls, condition) => getEl(id).classList.toggle(cls, condition);
@@ -455,12 +460,12 @@
         Notification.requestPermission().then(p => {
             if(p === 'granted') {
                 notificationsEnabled = true;
-                localStorage.setItem('v27_notify', 'true');
+                localStorage.setItem('v28_notify', 'true');
                 getEl('notificationToggle').checked = true;
                 showNotify("通知をONにしました", "success");
             } else {
                 notificationsEnabled = false;
-                localStorage.setItem('v27_notify', 'false');
+                localStorage.setItem('v28_notify', 'false');
                 getEl('notificationToggle').checked = false;
                 alert("通知がブロックされました");
             }
@@ -502,9 +507,28 @@
         });
     }
 
+    // --- Backup Feature (Export) ---
+    getEl('exportDataBtn').onclick = () => {
+        if (!events || events.length === 0) return showNotify("保存するデータがありません", "error");
+        
+        const dataStr = JSON.stringify(events, null, 2);
+        const blob = new Blob([dataStr], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        const date = new Date().toISOString().split('T')[0];
+        a.download = `calendar_backup_${date}.json`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        
+        showNotify("バックアップを作成しました", "success");
+    };
+
     // --- AI ---
     getEl('discoverBtn').onclick = async () => {
-        if (!geminiKey) geminiKey = localStorage.getItem('v27_key') || "";
+        if (!geminiKey) geminiKey = localStorage.getItem('v28_key') || "";
         if (!geminiKey) return showNotify("APIキーを入力してください", "error");
         setLoading(true, "Searching Models...");
         try {
@@ -533,7 +557,7 @@
     };
 
     async function analyzeImage(base64) {
-        if (!geminiKey) geminiKey = localStorage.getItem('v27_key') || "";
+        if (!geminiKey) geminiKey = localStorage.getItem('v28_key') || "";
         if (!geminiKey) return showNotify("APIキーを設定してください", "error");
         setLoading(true, "Analyzing...");
         const prompt = `画像からカレンダー予定を抽出しJSON形式で返してください: [{"title": "件名", "date": "YYYY-MM-DD", "time": "HH:mm", "description": ""}]。`;
@@ -650,7 +674,7 @@
                 ${ev.description ? `<p class="text-xs text-slate-500 leading-relaxed">${ev.description}</p>` : ''}
             `;
             card.querySelector('.edit-btn').onclick = () => openEventForm(ev.id);
-            card.querySelector('.del-btn').onclick = () => { if(confirm(`削除しますか？`)) deleteEvent(ev.id); };
+            card.querySelector('.del-btn').onclick = () => { if(confirm(`削除？`)) deleteEvent(ev.id); };
             listEl.appendChild(card);
         });
     }
@@ -658,18 +682,17 @@
     // --- Modal Controls & Listeners ---
     function openEventForm(id = null) {
         getEl('formEventId').value = id || "";
-        
         if (id) {
             const ev = events.find(e => e.id === id);
             getEl('formTitle').value = ev.title;
             getEl('formDate').value = ev.date;
             getEl('formTime').value = ev.time || "";
             getEl('formDescription').value = ev.description || "";
-            getEl('formNotify').checked = ev.notify !== false; // Default true
+            getEl('formNotify').checked = ev.notify !== false; 
         } else {
             getEl('eventForm').reset();
             getEl('formDate').value = selectedDateStr || "";
-            getEl('formNotify').checked = true; // 新規は通知ON
+            getEl('formNotify').checked = true; 
         }
         showModal('eventFormModal');
     }
@@ -682,7 +705,7 @@
             date: getEl('formDate').value,
             time: getEl('formTime').value,
             description: getEl('formDescription').value,
-            notify: getEl('formNotify').checked, // 通知設定保存
+            notify: getEl('formNotify').checked,
             updatedAt: serverTimestamp()
         };
         try {
@@ -719,14 +742,14 @@
     getEl('closeSettings').onclick = () => hideModal('settingsModal');
     getEl('notificationToggle').onchange = (e) => {
         if (e.target.checked) requestNotifyPermission();
-        else { notificationsEnabled = false; localStorage.setItem('v27_notify', 'false'); }
+        else { notificationsEnabled = false; localStorage.setItem('v28_notify', 'false'); }
     };
     
     getEl('saveSettings').onclick = () => {
         geminiKey = getEl('apiKeyInput').value.trim();
         geminiModel = getEl('modelSelect').value;
-        localStorage.setItem('v27_key', geminiKey); 
-        localStorage.setItem('v27_model', geminiModel);
+        localStorage.setItem('v28_key', geminiKey); 
+        localStorage.setItem('v28_model', geminiModel);
         
         getEl('activeModelBadge').textContent = geminiModel;
         showNotify("Saved", "success"); 
@@ -756,7 +779,7 @@
     function showNotify(txt, type) {
         const n = getEl('notification'); getEl('notifyText').textContent = txt;
         const icon = getEl('notifyIcon');
-        n.className = `fixed top-6 left-1/2 transform -translate-x-1/2 px-6 py-3 rounded-full shadow-lg z-[100] flex items-center space-x-3 min-w-[200px] text-white transition-all duration-300 ${type==='success'?'bg-emerald-500':'bg-red-500'}`;
+        n.className = `fixed top-6 left-1/2 transform -translate-x-1/2 px-6 py-3 rounded-full shadow-lg z-[100] flex items-center space-x-3 min-w-[300px] text-white transition-all duration-300 ${type==='success'?'bg-emerald-500':'bg-red-500'}`;
         icon.innerHTML = type==='success'?'<i class="fas fa-check"></i>':'<i class="fas fa-exclamation"></i>';
         n.classList.remove('translate-y-[-150%]', 'opacity-0');
         setTimeout(() => n.classList.add('translate-y-[-150%]', 'opacity-0'), 4000);
