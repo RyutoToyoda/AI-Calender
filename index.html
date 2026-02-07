@@ -2,19 +2,16 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <!-- viewport-fit=cover でノッチまで広げる -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>AI Calendar - Long Term Support</title>
+    <title>AI Calendar - v29.0 Mobile Plus</title>
 
-    <!-- 【重要】アプリ化（PWA）のための設定 -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="AI Calendar">
     <meta name="theme-color" content="#e0c3fc">
     
-    <!-- キャッシュ対策 -->
-    <script src="https://cdn.tailwindcss.com?v=28"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css?v=28">
+    <script src="https://cdn.tailwindcss.com?v=29"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css?v=29">
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
     
     <style>
@@ -29,6 +26,11 @@
             width: 100vw;
         }
         
+        /* スマホスクロール許可 */
+        @media (max-width: 768px) {
+            body { overflow: auto; height: auto; min-height: 100vh; }
+        }
+
         .glass {
             background: var(--glass-bg);
             backdrop-filter: blur(20px);
@@ -42,6 +44,7 @@
             grid-template-columns: repeat(7, 1fr); 
             gap: 8px;
             padding: 8px;
+            padding-bottom: 120px; /* FABのための余白 */
         }
 
         .day-card { 
@@ -53,26 +56,24 @@
             border-radius: 12px;
             padding: 4px; 
             position: relative;
-            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            transition: all 0.2s;
             border: 1px solid transparent;
             cursor: pointer;
             overflow: hidden;
         }
 
         @media (max-width: 768px) {
-            .calendar-grid { gap: 4px; padding: 4px; }
+            .calendar-grid { gap: 4px; padding: 4px; padding-bottom: 120px; }
             .day-card { 
                 border-radius: 8px; 
-                height: calc((100dvh - 220px) / 6); 
-                min-height: 60px; 
-                padding: 2px; 
+                min-height: 90px; 
+                height: auto;
+                padding: 4px; 
             }
         }
 
         .day-card:hover { 
             background: rgba(255, 255, 255, 0.9); 
-            transform: translateY(-2px); 
-            box-shadow: 0 12px 24px -8px rgba(0, 0, 0, 0.15);
             z-index: 10;
         }
         
@@ -129,10 +130,15 @@
 <body class="h-screen w-screen flex flex-col md:flex-row overflow-hidden text-slate-800">
 
     <!-- Version Badge -->
-    <div class="fixed top-0 left-0 bg-indigo-600 text-white text-[10px] px-2 py-1 z-[100] font-bold rounded-br-xl shadow-lg mt-safe safe-pt">v28.0 LTS</div>
+    <div class="fixed top-0 left-0 bg-indigo-600 text-white text-[10px] px-2 py-1 z-[100] font-bold rounded-br-xl shadow-lg mt-safe safe-pt">v29.0</div>
+
+    <!-- Mobile Floating Action Button (FAB) -->
+    <button id="mobileFabAdd" class="md:hidden fixed bottom-24 right-5 w-14 h-14 bg-indigo-600 text-white rounded-full shadow-lg z-30 flex items-center justify-center transition-transform active:scale-90 shadow-indigo-500/40">
+        <i class="fas fa-plus text-2xl"></i>
+    </button>
 
     <!-- Sidebar / Bottom Nav -->
-    <nav class="glass z-50 flex md:flex-col justify-between items-center p-2 md:py-6 md:px-3 fixed md:relative bottom-0 w-full md:w-24 md:h-full border-t md:border-t-0 md:border-r border-white/40 shadow-xl order-2 md:order-1 h-20 safe-pb">
+    <nav class="glass z-50 flex md:flex-col justify-between items-center p-2 md:py-6 md:px-3 fixed md:relative bottom-0 w-full md:w-24 md:h-full border-t md:border-t-0 md:border-r border-white/40 shadow-xl order-2 md:order-1 h-20 safe-pb flex-none">
         <div class="hidden md:flex bg-white/80 w-12 h-12 rounded-2xl items-center justify-center text-indigo-600 shadow-sm mb-8">
             <i class="fas fa-calendar-check text-2xl"></i>
         </div>
@@ -165,7 +171,7 @@
         
         <div id="calendarArea" class="flex-grow flex flex-col h-full relative z-0">
             <!-- Header -->
-            <div class="px-4 pt-4 pb-2 flex items-center justify-between">
+            <div class="px-4 pt-4 pb-2 flex items-center justify-between flex-none">
                 <div>
                     <div class="flex items-center gap-2">
                         <h2 class="text-2xl font-800 text-slate-800 tracking-tight drop-shadow-sm">Calendar</h2>
@@ -192,9 +198,9 @@
                 </div>
             </div>
 
-            <!-- Calendar Grid -->
-            <div id="calendarWrapper" class="flex-grow p-2 md:p-4 overflow-hidden flex flex-col hidden">
-                <div class="grid grid-cols-7 gap-1 mb-1 px-1 text-center">
+            <!-- Calendar Wrapper -->
+            <div id="calendarWrapper" class="flex-grow p-2 md:p-4 md:overflow-hidden flex flex-col hidden">
+                <div class="grid grid-cols-7 gap-1 mb-1 px-2 text-center flex-none sticky top-0 bg-transparent z-20 md:static">
                     <div class="text-[10px] font-bold text-red-400">SUN</div>
                     <div class="text-[10px] font-bold text-slate-500">MON</div>
                     <div class="text-[10px] font-bold text-slate-500">TUE</div>
@@ -203,13 +209,13 @@
                     <div class="text-[10px] font-bold text-slate-500">FRI</div>
                     <div class="text-[10px] font-bold text-blue-400">SAT</div>
                 </div>
-                <div id="calendarGrid" class="calendar-grid overflow-y-auto custom-scroll h-full pb-20 md:pb-0"></div>
+                <div id="calendarGrid" class="calendar-grid overflow-y-auto custom-scroll h-full"></div>
             </div>
         </div>
 
         <!-- Detail Sidebar -->
-        <aside id="dayDetailPanel" class="glass w-full md:w-[400px] border-l border-white/50 shadow-2xl z-20 flex flex-col transition-transform duration-500 transform translate-y-full md:translate-y-0 md:translate-x-full fixed md:absolute top-0 right-0 h-full rounded-t-[2.5rem] md:rounded-l-[2.5rem] md:rounded-tr-none overflow-hidden safe-pt">
-            <div class="p-6 border-b border-white/40 flex items-center justify-between bg-white/30">
+        <aside id="dayDetailPanel" class="glass w-full md:w-[400px] border-l border-white/50 shadow-2xl z-40 flex flex-col transition-transform duration-500 transform translate-y-full md:translate-y-0 md:translate-x-full fixed md:absolute bottom-16 md:bottom-0 md:top-0 right-0 h-[60vh] md:h-full rounded-t-[2rem] md:rounded-l-[2rem] md:rounded-tr-none overflow-hidden">
+            <div class="p-6 md:p-8 border-b border-white/40 flex items-center justify-between bg-white/30 flex-none">
                 <div>
                     <h3 id="detailDateDisplay" class="text-2xl font-800 text-slate-800 tracking-tight">Select</h3>
                     <p id="detailDayOfWeek" class="text-xs font-bold text-indigo-600 uppercase tracking-widest mt-1 opacity-80">--</p>
@@ -217,14 +223,14 @@
                 <button id="closeDetail" class="w-8 h-8 rounded-full bg-white/50 hover:bg-white flex items-center justify-center transition shadow-sm"><i class="fas fa-times text-slate-500"></i></button>
             </div>
 
-            <div id="detailEventList" class="flex-grow p-4 space-y-3 overflow-y-auto custom-scroll bg-white/20 pb-20">
+            <div id="detailEventList" class="flex-grow p-4 space-y-3 overflow-y-auto bg-white/20 pb-20">
                 <div class="flex flex-col items-center justify-center h-full text-slate-400">
-                    <i class="fas fa-hand-pointer text-4xl mb-4 opacity-30"></i>
+                    <i class="fas fa-hand-pointer text-3xl mb-3 opacity-30"></i>
                     <p class="text-xs font-bold opacity-70">日付を選択してください</p>
                 </div>
             </div>
 
-            <div class="p-4 bg-white/40 border-t border-white/40 safe-pb backdrop-blur-md absolute bottom-0 w-full">
+            <div class="p-4 bg-white/40 border-t border-white/40 safe-pb backdrop-blur-md absolute bottom-0 w-full hidden md:block">
                 <button id="manualAddBtn" class="w-full py-3 bg-slate-900 text-white font-bold rounded-2xl shadow-xl hover:bg-slate-800 transition transform active:scale-95 flex items-center justify-center gap-2 text-sm">
                     <i class="fas fa-plus"></i> 新しい予定を追加
                 </button>
@@ -325,15 +331,12 @@
                         <label for="notificationToggle" class="toggle-label block overflow-hidden h-5 rounded-full bg-gray-300 cursor-pointer"></label>
                     </div>
                 </div>
-                
-                <!-- バックアップ機能 -->
-                <div class="pt-2 border-t border-slate-100">
-                    <label class="text-[10px] font-bold text-slate-400 uppercase ml-2 mb-2 block">データ管理</label>
+                <!-- Backup -->
+                <div class="pt-2 border-t border-slate-200">
                     <button id="exportDataBtn" class="w-full py-2.5 bg-slate-100 text-indigo-600 font-bold rounded-xl hover:bg-slate-200 transition text-xs flex items-center justify-center gap-2">
                         <i class="fas fa-download"></i> データをバックアップ
                     </button>
                 </div>
-
                 <div class="flex gap-3 pt-2">
                     <button id="closeSettings" class="flex-1 py-2.5 text-slate-500 font-bold hover:bg-slate-100 rounded-xl transition text-xs">閉じる</button>
                     <button id="saveSettings" class="flex-1 py-2.5 bg-indigo-600 text-white font-bold rounded-xl shadow-lg hover:bg-indigo-700 transition text-xs">保存</button>
@@ -369,7 +372,7 @@
         messagingSenderId: "591169343842",
         appId: "1:591169343842:web:4345e3fdff52d4b5cadc3b"
     };
-    const appId = "calendar-app-v28-0";
+    const appId = "calendar-app-v29-0";
 
     const fbApp = initializeApp(firebaseConfig);
     const auth = getAuth(fbApp);
@@ -377,8 +380,8 @@
     const provider = new GoogleAuthProvider();
 
     let user = null, events = [], currentDate = new Date(), selectedDateStr = null, unsubscribe = null;
-    let geminiKey = localStorage.getItem('v28_key') || "", geminiModel = localStorage.getItem('v28_model') || "gemini-1.5-flash";
-    let notificationsEnabled = localStorage.getItem('v28_notify') === 'true';
+    let geminiKey = localStorage.getItem('v29_key') || "", geminiModel = localStorage.getItem('v29_model') || "gemini-1.5-flash";
+    let notificationsEnabled = localStorage.getItem('v29_notify') === 'true';
 
     const getEl = (id) => document.getElementById(id);
     const toggleClass = (id, cls, condition) => getEl(id).classList.toggle(cls, condition);
@@ -426,7 +429,7 @@
         if (currentHour === 6 && currentMin === 30) {
             const todayEvents = events.filter(e => e.date === todayStr && e.notify !== false);
             if (todayEvents.length > 0 && !sessionStorage.getItem(`notified_morning_${todayStr}`)) {
-                sendNotification(`今日の予定: ${todayEvents.length}件`, todayEvents.map(e => `・${e.time||''} ${e.title}`).join('\n'));
+                sendNotification(`今日の予定: ${todayEvents.length}件`, todayEvents.map(e => `・${e.title}`).join('\n'));
                 sessionStorage.setItem(`notified_morning_${todayStr}`, 'true');
             }
         }
@@ -460,12 +463,12 @@
         Notification.requestPermission().then(p => {
             if(p === 'granted') {
                 notificationsEnabled = true;
-                localStorage.setItem('v28_notify', 'true');
+                localStorage.setItem('v29_notify', 'true');
                 getEl('notificationToggle').checked = true;
                 showNotify("通知をONにしました", "success");
             } else {
                 notificationsEnabled = false;
-                localStorage.setItem('v28_notify', 'false');
+                localStorage.setItem('v29_notify', 'false');
                 getEl('notificationToggle').checked = false;
                 alert("通知がブロックされました");
             }
@@ -528,7 +531,7 @@
 
     // --- AI ---
     getEl('discoverBtn').onclick = async () => {
-        if (!geminiKey) geminiKey = localStorage.getItem('v28_key') || "";
+        if (!geminiKey) geminiKey = localStorage.getItem('v29_key') || "";
         if (!geminiKey) return showNotify("APIキーを入力してください", "error");
         setLoading(true, "Searching Models...");
         try {
@@ -557,7 +560,7 @@
     };
 
     async function analyzeImage(base64) {
-        if (!geminiKey) geminiKey = localStorage.getItem('v28_key') || "";
+        if (!geminiKey) geminiKey = localStorage.getItem('v29_key') || "";
         if (!geminiKey) return showNotify("APIキーを設定してください", "error");
         setLoading(true, "Analyzing...");
         const prompt = `画像からカレンダー予定を抽出しJSON形式で返してください: [{"title": "件名", "date": "YYYY-MM-DD", "time": "HH:mm", "description": ""}]。`;
@@ -682,17 +685,19 @@
     // --- Modal Controls & Listeners ---
     function openEventForm(id = null) {
         getEl('formEventId').value = id || "";
+        
         if (id) {
             const ev = events.find(e => e.id === id);
             getEl('formTitle').value = ev.title;
             getEl('formDate').value = ev.date;
             getEl('formTime').value = ev.time || "";
             getEl('formDescription').value = ev.description || "";
-            getEl('formNotify').checked = ev.notify !== false; 
+            getEl('formNotify').checked = ev.notify !== false; // Default true
         } else {
             getEl('eventForm').reset();
-            getEl('formDate').value = selectedDateStr || "";
-            getEl('formNotify').checked = true; 
+            const todayStr = new Date().toISOString().split('T')[0];
+            getEl('formDate').value = selectedDateStr || todayStr;
+            getEl('formNotify').checked = true; // 新規は通知ON
         }
         showModal('eventFormModal');
     }
@@ -729,9 +734,11 @@
     getEl('nextBtn').onclick = () => { currentDate.setMonth(currentDate.getMonth()+1); renderCalendar(); };
     getEl('closeDetail').onclick = () => {
         const panel = getEl('dayDetailPanel');
-        panel.classList.add('md:translate-x-full', 'translate-y-full');
+        if(window.innerWidth < 768) panel.classList.add('translate-y-full');
+        else panel.classList.add('md:translate-x-full');
     };
     getEl('manualAddBtn').onclick = () => openEventForm();
+    getEl('mobileFabAdd').onclick = () => openEventForm();
     getEl('closeEventForm').onclick = () => hideModal('eventFormModal');
     
     getEl('openSettings').onclick = () => { 
@@ -742,14 +749,14 @@
     getEl('closeSettings').onclick = () => hideModal('settingsModal');
     getEl('notificationToggle').onchange = (e) => {
         if (e.target.checked) requestNotifyPermission();
-        else { notificationsEnabled = false; localStorage.setItem('v28_notify', 'false'); }
+        else { notificationsEnabled = false; localStorage.setItem('v29_notify', 'false'); }
     };
     
     getEl('saveSettings').onclick = () => {
         geminiKey = getEl('apiKeyInput').value.trim();
         geminiModel = getEl('modelSelect').value;
-        localStorage.setItem('v28_key', geminiKey); 
-        localStorage.setItem('v28_model', geminiModel);
+        localStorage.setItem('v29_key', geminiKey); 
+        localStorage.setItem('v29_model', geminiModel);
         
         getEl('activeModelBadge').textContent = geminiModel;
         showNotify("Saved", "success"); 
